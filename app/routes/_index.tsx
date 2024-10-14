@@ -39,24 +39,26 @@ export default function Index() {
   return (
     <div className="p-4">
       <h1 className="text-6xl font-bold">LaffCut</h1>
-      <div className="grid grid-cols-1 gap-4 mt-10">
-        <h2 className="text-2xl font-bold">音声ファイルのラウドネス計測</h2>
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-md p-4 text-center cursor-pointer ${
-            isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
-          }`}
-        >
-          <input {...getInputProps()} />
-          {isDragActive ? (
-            <p>ファイルをここにドロップ...</p>
-          ) : (
-            <p>
-              ファイルをドラッグアンドドロップするか、クリックしてファイルを選択してください
-            </p>
-          )}
+      <div className="grid grid-cols-2 ml-4">
+        <div className="grid grid-cols-1 gap-8 mt-10">
+          <h2 className="text-2xl font-bold">音声ファイルのラウドネス計測</h2>
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-md py-40 px-4 w-2/3 text-center cursor-pointer ${
+              isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-500'
+            }`}
+          >
+            <input {...getInputProps()} />
+            {isDragActive ? (
+              <p>ファイルをここにドロップ...</p>
+            ) : (
+              <p>
+                ファイルをドラッグアンドドロップするか、クリックしてファイルを選択してください
+              </p>
+            )}
+          </div>
+          {file && <p>選択されたファイル: {file.name}</p>}
         </div>
-        {file && <p>選択されたファイル: {file.name}</p>}
       </div>
     </div>
   )

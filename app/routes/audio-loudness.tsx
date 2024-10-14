@@ -25,12 +25,12 @@ export const action = async ({ request }: { request: Request }) => {
 }
 
 export default function AudioLoudness() {
-  const [file, setFile] = useState<File | null>(null)
-  const actionData = useActionData()
+  // const [file, setFile] = useState<File | null>(null)
+  // const actionData = useActionData()
   return (
     <div>
       <h1>LaffCut</h1>
-      <div>
+      {/* <div>
         <h2>音声ファイルのラウドネス計測</h2>
         <Form method="post" encType="multipart/form-data">
           <input
@@ -43,13 +43,13 @@ export default function AudioLoudness() {
             アップロード＆計測
           </button>
         </Form>
-        {actionData && (
+        {/* {actionData && (
           <div>
             <h2>計測結果:</h2>
             <pre>{JSON.stringify(actionData, null, 2)}</pre>
           </div>
-        )}
-      </div>
+        )} 
+      </div> */}
     </div>
   )
 }

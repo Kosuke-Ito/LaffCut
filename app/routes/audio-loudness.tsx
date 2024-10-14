@@ -1,6 +1,7 @@
 import type { MetaFunction } from '@remix-run/node'
 import { useState } from 'react'
 import { Form, useActionData } from '@remix-run/react'
+import { measureLoudness } from '../services/loudness.server'
 
 export const meta: MetaFunction = () => {
   return [
@@ -16,7 +17,6 @@ export const action = async ({ request }: { request: Request }) => {
   const formData = await request.formData()
   const file = formData.get('audioFile')
   console.log('🚀 ~ action ~ file:', file)
-
   // ここでファイルを処理し、ラウドネスを計測します
   // 実際の実装はサーバーサイドで行います
 
@@ -25,12 +25,13 @@ export const action = async ({ request }: { request: Request }) => {
 }
 
 export default function AudioLoudness() {
-  // const [file, setFile] = useState<File | null>(null)
-  // const actionData = useActionData()
+  const [file, setFile] = useState<File | null>(null)
+  const actionData = useActionData()
+
   return (
     <div className="p-4">
       <h1 className="text-6xl font-bold">LaffCut</h1>
-      {/* <div>
+      <div>
         <h2>音声ファイルのラウドネス計測</h2>
         <Form method="post" encType="multipart/form-data">
           <input
@@ -43,13 +44,13 @@ export default function AudioLoudness() {
             アップロード＆計測
           </button>
         </Form>
-        {/* {actionData && (
+        {actionData && (
           <div>
             <h2>計測結果:</h2>
             <pre>{JSON.stringify(actionData, null, 2)}</pre>
           </div>
-        )} 
-      </div> */}
+        )}
+      </div>
     </div>
   )
 }

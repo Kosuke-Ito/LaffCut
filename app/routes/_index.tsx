@@ -23,17 +23,30 @@ export const action = async ({ request }: { request: Request }) => {
 
 export default function Index() {
   const [file, setFile] = useState<File | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const actionData = useActionData()
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0])
-    }
-  }, [])
+  const onDrop = useCallback(
+    (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      if (acceptedFiles.length > 0) {
+        setFile(acceptedFiles[0])
+        setError(null)
+      } else if (rejectedFiles.length > 0) {
+        setError(
+          '無効なファイル形式です。.wavまたは.mp3ファイルを選択してください。'
+        )
+      }
+    },
+    []
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'audio/*': ['.mp3', '.wav'] },
+    accept: {
+      'audio/wav': ['.wav'],
+      'audio/mpeg': ['.mp3'],
+    },
+    maxFiles: 1,
   })
 
   return (
@@ -58,6 +71,7 @@ export default function Index() {
             )}
           </div>
           {file && <p>選択されたファイル: {file.name}</p>}
+          {error && <p className="text-red-500">{error}</p>}
         </div>
       </div>
     </div>

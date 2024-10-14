@@ -28,8 +28,8 @@ export default function AudioLoudness() {
   // const [file, setFile] = useState<File | null>(null)
   // const actionData = useActionData()
   return (
-    <div>
-      <h1>LaffCut</h1>
+    <div className="p-4">
+      <h1 className="text-6xl font-bold">LaffCut</h1>
       {/* <div>
         <h2>音声ファイルのラウドネス計測</h2>
         <Form method="post" encType="multipart/form-data">

@@ -24,7 +24,7 @@ export const action = async ({ request }: { request: Request }) => {
   return { loudness: -14.5, peak: -1.2 }
 }
 
-export default function Index() {
+export default function AudioLoudness() {
   const [file, setFile] = useState<File | null>(null)
   const actionData = useActionData()
   return (

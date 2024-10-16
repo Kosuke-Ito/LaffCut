@@ -13,14 +13,6 @@ export const meta: MetaFunction = () => {
   ]
 }
 
-export const action = async ({ request }: { request: Request }) => {
-  const formData = await request.formData()
-  const file = formData.get('audioFile')
-
-  // 仮の結果を返します
-  return { loudness: -14.5, peak: -1.2 }
-}
-
 export default function Index() {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)

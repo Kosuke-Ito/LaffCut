@@ -105,9 +105,18 @@ export default function Index() {
             )}
           </div>
           {error && <p className="text-red-500">{error}</p>}
-          {loudness !== null && (
-            <p className="mt-4">ラウドネス: {loudness.toFixed(2)} dB</p>
-          )}
+          <p className="mt-4">
+            ラウドネス:{' '}
+            {loudness === null ? (
+              ''
+            ) : loudness === undefined ? (
+              <div className="inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin">
+                aaaa
+              </div>
+            ) : (
+              `${loudness.toFixed(2)} dB`
+            )}
+          </p>
         </div>
       </div>
     </div>

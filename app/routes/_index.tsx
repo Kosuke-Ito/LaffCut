@@ -65,7 +65,10 @@ export default function Index() {
             {isDragActive ? (
               <p>ファイルをここにドロップ...</p>
             ) : file ? (
-              <p>選択されたファイル: {file.name}</p>
+              <div>
+                選択されたファイル:{' '}
+                <p className="text-xl font-bold">{file.name}</p>
+              </div>
             ) : (
               <p>
                 ファイルをドラッグアンドドロップするか、クリックしてファイルを選択してください

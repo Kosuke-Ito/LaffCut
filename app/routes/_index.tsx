@@ -64,13 +64,14 @@ export default function Index() {
             <input {...getInputProps()} />
             {isDragActive ? (
               <p>ファイルをここにドロップ...</p>
+            ) : file ? (
+              <p>選択されたファイル: {file.name}</p>
             ) : (
               <p>
                 ファイルをドラッグアンドドロップするか、クリックしてファイルを選択してください
               </p>
             )}
           </div>
-          {file && <p>選択されたファイル: {file.name}</p>}
           {error && <p className="text-red-500">{error}</p>}
         </div>
       </div>

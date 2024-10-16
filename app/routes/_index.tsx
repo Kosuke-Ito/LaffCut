@@ -41,6 +41,43 @@ export default function Index() {
     maxFiles: 1,
   })
 
+  useEffect(() => {
+    if (file) {
+      measureLoudness(file)
+    }
+  }, [file])
+
+  const measureLoudness = async (audioFile: File) => {
+    const audioContext = new AudioContext()
+    const arrayBuffer = await audioFile.arrayBuffer()
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+
+    const analyser = audioContext.createAnalyser()
+    const source = audioContext.createBufferSource()
+    source.buffer = audioBuffer
+    source.connect(analyser)
+
+    analyser.fftSize = 2048
+    const bufferLength = analyser.frequencyBinCount
+    const dataArray = new Float32Array(bufferLength)
+
+    let sum = 0
+    let count = 0
+
+    while (count < audioBuffer.length) {
+      analyser.getFloatTimeDomainData(dataArray)
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i] * dataArray[i]
+        count++
+      }
+    }
+
+    const rms = Math.sqrt(sum / count)
+    const loudness = 20 * Math.log10(rms)
+
+    setLoudness(loudness)
+  }
+
   return (
     <div className="p-4">
       <h1 className="text-6xl font-bold">LaffCut</h1>

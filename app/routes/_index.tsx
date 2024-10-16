@@ -68,6 +68,9 @@ export default function Index() {
             )}
           </div>
           {error && <p className="text-red-500">{error}</p>}
+          {loudness !== null && (
+            <p className="mt-4">ラウドネス: {loudness.toFixed(2)} dB</p>
+          )}
         </div>
       </div>
     </div>

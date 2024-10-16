@@ -1,5 +1,4 @@
 import type { MetaFunction } from '@remix-run/node'
-import { Form, useActionData } from '@remix-run/react'
 import { FileRejection } from 'node_modules/react-dropzone-esm/types/react-dropzone'
 import { useDropzone } from 'react-dropzone-esm'
 

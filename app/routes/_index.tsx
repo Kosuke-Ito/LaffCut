@@ -16,7 +16,7 @@ export const meta: MetaFunction = () => {
 export default function Index() {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const actionData = useActionData()
+  const [loudness, setLoudness] = useState<number | null>(null)
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {

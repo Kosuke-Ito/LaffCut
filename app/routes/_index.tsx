@@ -17,6 +17,7 @@ export default function Index() {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loudness, setLoudness] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
@@ -48,6 +49,7 @@ export default function Index() {
   }, [file])
 
   const measureLoudness = async (audioFile: File) => {
+    setLoading(true)
     const audioContext = new AudioContext()
     const arrayBuffer = await audioFile.arrayBuffer()
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
@@ -76,6 +78,7 @@ export default function Index() {
     const loudness = 20 * Math.log10(rms)
 
     setLoudness(loudness)
+    setLoading(false)
   }
 
   return (
@@ -107,12 +110,10 @@ export default function Index() {
           {error && <p className="text-red-500">{error}</p>}
           <p className="mt-4">
             ラウドネス:{' '}
-            {loudness === null ? (
+            {loading ? (
+              <div className="inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+            ) : loudness === null ? (
               ''
-            ) : loudness === undefined ? (
-              <div className="inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin">
-                aaaa
-              </div>
             ) : (
               `${loudness.toFixed(2)} dB`
             )}

@@ -2,7 +2,7 @@ import type { MetaFunction } from '@remix-run/node'
 import { FileRejection } from 'node_modules/react-dropzone-esm/types/react-dropzone'
 import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone-esm'
-
+import { Button } from '~/components/ui/button'
 export const meta: MetaFunction = () => {
   return [
     { title: 'LaffCut' },
@@ -87,6 +87,7 @@ export default function Index() {
       <div className="grid grid-cols-2 ml-4">
         <div className="grid grid-cols-1 gap-8 mt-10">
           <h2 className="text-2xl font-bold">音声ファイルのラウドネス計測</h2>
+          <Button>テスト</Button>
           <div
             {...getRootProps()}
             className={`border-2 border-dashed rounded-md py-40 px-4 w-2/3 text-center cursor-pointer ${

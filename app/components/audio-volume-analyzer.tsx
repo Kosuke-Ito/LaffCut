@@ -22,51 +22,94 @@ export function AudioVolumeAnalyzerComponent() {
 
   const analyzeVolume = useCallback(async () => {
     if (!file) return
-
     setIsAnalyzing(true)
 
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const audioContext = new (window.AudioContext ||
+      (window as any).webkitAudioContext)()
     const arrayBuffer = await file.arrayBuffer()
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
 
+    // オフラインコンテキストを作成
     const offlineContext = new OfflineAudioContext(
       audioBuffer.numberOfChannels,
       audioBuffer.length,
       audioBuffer.sampleRate
     )
 
+    // ソースを作成
     const source = offlineContext.createBufferSource()
     source.buffer = audioBuffer
 
-    const analyser = offlineContext.createAnalyser()
-    analyser.fftSize = 2048
+    // BS.1770-4に基づくフィルターを作成
+    const highPassFilter = offlineContext.createBiquadFilter()
+    highPassFilter.type = 'highpass'
+    highPassFilter.frequency.value = 38
+    highPassFilter.Q.value = 0.5
 
-    source.connect(analyser)
-    analyser.connect(offlineContext.destination)
+    const highShelfFilter = offlineContext.createBiquadFilter()
+    highShelfFilter.type = 'highshelf'
+    highShelfFilter.frequency.value = 1500
+    highShelfFilter.gain.value = 4.0
 
-    source.start(0)
+    // フィルターチェーンを接続
+    source.connect(highPassFilter)
+    highPassFilter.connect(highShelfFilter)
 
-    const bufferLength = analyser.frequencyBinCount
-    const dataArray = new Uint8Array(bufferLength)
+    // ブロックサイズ (400ms)
+    const blockSize = Math.floor(audioBuffer.sampleRate * 0.4)
+    const channels = audioBuffer.numberOfChannels
+    const length = audioBuffer.length
 
-    let totalVolume = 0
-    let sampleCount = 0
+    let blockCount = 0
+    const blocks: number[] = []
 
-    offlineContext.startRendering().then((renderedBuffer) => {
-      const stepSize = Math.floor(renderedBuffer.length / 1000) // Analyze 1000 points
+    // 各チャンネルのデータを処理
+    for (let i = 0; i < length; i += blockSize) {
+      let blockPower = 0
+      const currentBlockSize = Math.min(blockSize, length - i)
 
-      for (let i = 0; i < renderedBuffer.length; i += stepSize) {
-        analyser.getByteFrequencyData(dataArray)
-        const average = dataArray.reduce((acc, value) => acc + value, 0) / bufferLength
-        totalVolume += average
-        sampleCount++
+      for (let channel = 0; channel < channels; channel++) {
+        const channelData = audioBuffer.getChannelData(channel)
+        let sum = 0
+
+        for (let j = 0; j < currentBlockSize; j++) {
+          const sample = channelData[i + j]
+          sum += sample * sample
+        }
+
+        // チャンネルの重み付け (BS.1770-4)
+        const weight = channel <= 2 ? 1.0 : 1.41
+        blockPower += (sum / currentBlockSize) * weight
       }
 
-      const finalAverageVolume = Math.round((totalVolume / sampleCount / 255) * 100)
-      setAverageVolume(finalAverageVolume)
-      setIsAnalyzing(false)
-    })
+      const blockLoudness = -0.691 + 10 * Math.log10(blockPower)
+      blocks.push(blockLoudness)
+      blockCount++
+    }
 
+    // 相対ゲーティング (-10 LU下のブロックを除外)
+    const ungatedLoudness =
+      -0.691 +
+      10 *
+        Math.log10(
+          blocks.reduce((a, b) => a + Math.pow(10, b / 10), 0) / blockCount
+        )
+    const gatingThreshold = ungatedLoudness - 10
+
+    const gatedBlocks = blocks.filter((block) => block > gatingThreshold)
+    const lufs =
+      gatedBlocks.length > 0
+        ? -0.691 +
+          10 *
+            Math.log10(
+              gatedBlocks.reduce((a, b) => a + Math.pow(10, b / 10), 0) /
+                gatedBlocks.length
+            )
+        : -70
+
+    // LUFS値を0-100の範囲に正規化
+    setAverageVolume(lufs)
+    setIsAnalyzing(false)
   }, [file])
 
   return (

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Button } from "~/components/ui/button"
-import { Progress } from "~/components/ui/progress"
-import { FileAudio, Volume2 } from "lucide-react"
+import { Button } from '~/components/ui/button'
+import { Progress } from '~/components/ui/progress'
+import { FileAudio, Volume2 } from 'lucide-react'
 
 export function AudioVolumeAnalyzerComponent() {
   const [file, setFile] = useState<File | null>(null)

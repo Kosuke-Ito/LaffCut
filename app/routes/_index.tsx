@@ -3,6 +3,7 @@ import { FileAudio } from 'lucide-react'
 import { FileRejection } from 'node_modules/react-dropzone-esm/types/react-dropzone'
 import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone-esm'
+import { AudioVolumeAnalyzerComponent } from '~/components/audio-volume-analyzer'
 
 export const meta: MetaFunction = () => {
   return [
@@ -121,6 +122,8 @@ export default function Index() {
             )}
           </p>
         </div>
+
+        <AudioVolumeAnalyzerComponent />
       </div>
     </div>
   )

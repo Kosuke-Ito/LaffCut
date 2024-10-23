@@ -132,11 +132,11 @@ export function AudioVolumeAnalyzerComponent() {
             <h2 className="text-lg font-semibold mb-4">{file.name}</h2>
             <div className="flex items-center mb-2">
               <Volume2 className="mr-2 h-5 w-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">平均音量:</span>
+              <span className="text-sm font-medium text-gray-700">LUFS:</span>
             </div>
             <Progress value={averageVolume} className="w-full mb-2" />
             <p className="text-center text-sm text-gray-600 mb-4">
-              {isAnalyzing ? '分析中...' : `${averageVolume}%`}
+              {isAnalyzing ? '分析中...' : `${averageVolume.toFixed(2)}`}
             </p>
             <div className="flex gap-2">
               <Button

@@ -1,110 +1,122 @@
-import { useState } from 'react';
-import { convert } from 'xml-js';
+import { useState } from 'react'
+import pkg from 'xml-js'
+const convert = pkg
 
 export function SubtitleConverter() {
-  const [subtitleFile, setSubtitleFile] = useState<File | null>(null);
-  const [convertedXML, setConvertedXML] = useState<string>('');
-  const [outputFormat, setOutputFormat] = useState<'fcpxml' | 'xml'>('fcpxml');
+  const [subtitleFile, setSubtitleFile] = useState<File | null>(null)
+  const [convertedXML, setConvertedXML] = useState<string>('')
+  const [outputFormat, setOutputFormat] = useState<'fcpxml' | 'xml'>('fcpxml')
 
-  const parseSRT = async (file: File): Promise<Array<{ id: number; start: string; end: string; text: string }>> => {
-    const text = await file.text();
-    const blocks = text.trim().split('\n\n');
-    
-    return blocks.map(block => {
-      const [id, time, ...textLines] = block.split('\n');
-      const [start, end] = time.split(' --> ');
+  const parseSRT = async (
+    file: File
+  ): Promise<
+    Array<{ id: number; start: string; end: string; text: string }>
+  > => {
+    const text = await file.text()
+    const blocks = text.trim().split('\n\n')
+
+    return blocks.map((block) => {
+      const [id, time, ...textLines] = block.split('\n')
+      const [start, end] = time.split(' --> ')
       return {
         id: parseInt(id),
         start,
         end,
-        text: textLines.join('\n')
-      };
-    });
-  };
+        text: textLines.join('\n'),
+      }
+    })
+  }
 
-  const convertToFCPXML = (subtitles: Array<{ id: number; start: string; end: string; text: string }>) => {
+  const convertToFCPXML = (
+    subtitles: Array<{ id: number; start: string; end: string; text: string }>
+  ) => {
     const fcpxml = {
       fcpxml: {
         _attributes: {
-          version: "1.8"
+          version: '1.8',
         },
         resources: {
           format: {
             _attributes: {
-              id: "r1",
-              name: "FFVideoFormat1080p30"
-            }
-          }
+              id: 'r1',
+              name: 'FFVideoFormat1080p30',
+            },
+          },
         },
         library: {
           event: {
             project: {
               sequence: {
                 spine: {
-                  title: subtitles.map(sub => ({
+                  title: subtitles.map((sub) => ({
                     text: {
                       _attributes: {
                         start: sub.start,
                         end: sub.end,
                       },
-                      _text: sub.text
-                    }
-                  }))
-                }
-              }
-            }
-          }
-        }
-      }
-    };
+                      _text: sub.text,
+                    },
+                  })),
+                },
+              },
+            },
+          },
+        },
+      },
+    }
 
-    return convert.js2xml(fcpxml, { compact: true, spaces: 2 });
-  };
+    return convert.js2xml(fcpxml, { compact: true, spaces: 2 })
+  }
 
-  const convertToXML = (subtitles: Array<{ id: number; start: string; end: string; text: string }>) => {
+  const convertToXML = (
+    subtitles: Array<{ id: number; start: string; end: string; text: string }>
+  ) => {
     const xml = {
       subtitles: {
-        subtitle: subtitles.map(sub => ({
+        subtitle: subtitles.map((sub) => ({
           _attributes: {
             id: sub.id,
             start: sub.start,
-            end: sub.end
+            end: sub.end,
           },
-          _text: sub.text
-        }))
-      }
-    };
+          _text: sub.text,
+        })),
+      },
+    }
 
-    return convert.js2xml(xml, { compact: true, spaces: 2 });
-  };
+    return convert.js2xml(xml, { compact: true, spaces: 2 })
+  }
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
     if (file) {
-      setSubtitleFile(file);
+      setSubtitleFile(file)
       try {
-        const subtitles = await parseSRT(file);
-        const xml = outputFormat === 'fcpxml' 
-          ? convertToFCPXML(subtitles)
-          : convertToXML(subtitles);
-        setConvertedXML(xml);
+        const subtitles = await parseSRT(file)
+        const xml =
+          outputFormat === 'fcpxml'
+            ? convertToFCPXML(subtitles)
+            : convertToXML(subtitles)
+        setConvertedXML(xml)
       } catch (error) {
-        console.error('Error converting subtitle:', error);
+        console.error('Error converting subtitle:', error)
       }
     }
-  };
+  }
 
   const handleDownload = () => {
-    const blob = new Blob([convertedXML], { type: 'text/xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `converted-subtitles.${outputFormat}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+    const blob = new Blob([convertedXML], { type: 'text/xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `converted-subtitles.${outputFormat}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div className="space-y-6">
@@ -151,5 +163,5 @@ export function SubtitleConverter() {
         </div>
       )}
     </div>
-  );
+  )
 }

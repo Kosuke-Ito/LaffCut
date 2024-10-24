@@ -5,10 +5,10 @@ import { SubtitleConverter } from '~/components/SubtitleConverter'
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Video Editor Utility' },
+    { title: 'LaffCut' },
     {
       name: 'description',
-      content: 'Audio analysis and subtitle conversion tools for video editors',
+      content: 'LaffCutは動画編集者向けの音声分析と字幕変換ツールです。',
     },
   ]
 }

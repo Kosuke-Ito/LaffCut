@@ -57,7 +57,10 @@ export function AudioAnalyzer() {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="audio-file"
+          className="block text-sm font-medium text-gray-700"
+        >
           Upload Audio File
         </label>
         <input
@@ -87,13 +90,17 @@ export function AudioAnalyzer() {
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-sm text-gray-500">True Peak</p>
               <p className="text-2xl font-bold">
-                {results.truePeak.toFixed(1)} dB
+                {results.truePeak !== null
+                  ? `${results.truePeak.toFixed(1)} dB`
+                  : '計測不能'}
               </p>
             </div>
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-sm text-gray-500">Short-term LUFS</p>
               <p className="text-2xl font-bold">
-                {results.shortTermLUFS.toFixed(1)}
+                {results.shortTermLUFS !== null
+                  ? `${results.shortTermLUFS.toFixed(1)} LUFS`
+                  : '計測不能'}
               </p>
             </div>
           </div>

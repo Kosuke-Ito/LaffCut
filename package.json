@@ -25,7 +25,8 @@
     "react-dom": "^18.2.0",
     "react-dropzone-esm": "^15.0.1",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.13.1",

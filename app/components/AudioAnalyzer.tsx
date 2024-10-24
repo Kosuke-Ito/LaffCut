@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
 export function AudioAnalyzer() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [results, setResults] = useState<{

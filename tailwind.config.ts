@@ -4,4 +4,7 @@ export default {
   darkMode: ['class'],
   content: ['./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}'],
   plugins: [require('tailwindcss-animate')],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 } satisfies Config

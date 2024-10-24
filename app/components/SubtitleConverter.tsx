@@ -3,6 +3,7 @@ import pkg from 'xml-js'
 const convert = pkg
 
 export function SubtitleConverter() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [subtitleFile, setSubtitleFile] = useState<File | null>(null)
   const [convertedXML, setConvertedXML] = useState<string>('')
   const [outputFormat, setOutputFormat] = useState<'fcpxml' | 'xml'>('fcpxml')

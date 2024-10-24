@@ -86,6 +86,9 @@ export function AudioAnalyzer() {
               <p className="text-2xl font-bold">
                 {results.integratedLUFS.toFixed(1)}
               </p>
+              <p className="text-xs text-gray-400">
+                音声の全体的なラウドネスを示す指標で、音量の一貫性を評価するのに役立ちます。
+              </p>
             </div>
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-sm text-gray-500">True Peak</p>
@@ -94,6 +97,9 @@ export function AudioAnalyzer() {
                   ? `${results.truePeak.toFixed(1)} dB`
                   : '計測不能'}
               </p>
+              <p className="text-xs text-gray-400">
+                一番大きな音のレベルを示し、音が割れる（クリッピング）可能性を確認するのに役立ちます。
+              </p>
             </div>
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-sm text-gray-500">Short-term LUFS</p>
@@ -101,6 +107,9 @@ export function AudioAnalyzer() {
                 {results.shortTermLUFS !== null
                   ? `${results.shortTermLUFS.toFixed(1)} LUFS`
                   : '計測不能'}
+              </p>
+              <p className="text-xs text-gray-400">
+                短期間のラウドネスを表す指標で、音声の一時的な音量変化を評価するのに使用されます。
               </p>
             </div>
           </div>

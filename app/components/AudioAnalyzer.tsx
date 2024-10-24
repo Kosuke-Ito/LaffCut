@@ -61,7 +61,7 @@ export function AudioAnalyzer() {
           htmlFor="audio-file"
           className="block text-sm font-medium text-gray-700"
         >
-          Upload Audio File
+          音声ファイルをアップロード
         </label>
         <input
           type="file"
@@ -73,16 +73,16 @@ export function AudioAnalyzer() {
 
       {analyzing && (
         <div className="text-center">
-          <p>Analyzing audio...</p>
+          <p>音声を解析中...</p>
         </div>
       )}
 
       {results.integratedLUFS !== null && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Analysis Results</h3>
+          <h3 className="text-lg font-medium">解析結果</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gray-50 p-4 rounded">
-              <p className="text-sm text-gray-500">Integrated LUFS</p>
+              <p className="text-sm text-gray-500">LUFS</p>
               <p className="text-2xl font-bold">
                 {results.integratedLUFS.toFixed(1)}
               </p>

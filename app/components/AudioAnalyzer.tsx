@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileAudio, Volume2 } from 'lucide-react'
 
 export function AudioAnalyzer() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,27 +47,61 @@ export function AudioAnalyzer() {
     }
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setAudioFile(file)
-      analyzeAudio(file)
+  const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const droppedFile = e.dataTransfer.files[0]
+    if (droppedFile && droppedFile.type.startsWith('audio/')) {
+      setFile(droppedFile)
+      setAverageVolume(0)
+      setIsAnalyzing(false)
     }
-  }
+  }, [])
+
+  // const onDrop = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0]
+  //   if (file) {
+  //     setAudioFile(file)
+  //     analyzeAudio(file)
+  //   }
+  // }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
+      <div className="bg-slate-50 p-4 rounded">
+        <h3 className="text-lg font-medium">YouTubeアップロード推奨設定</h3>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>推奨LUFS：-10 ~ -14 LUFS</li>
+          <li>True Peak制限：-1 dBTP</li>
+        </ul>
+        <p className="text-xs text-gray-500">
+          詳細は{' '}
+          <a
+            href="https://support.google.com/youtube/answer/1722171?hl=ja"
+            className="text-blue-500 underline"
+          >
+            YouTubeのエンコード設定推奨
+          </a>{' '}
+          を参照してください。
+        </p>
+      </div>
+
       <div>
+        <div
+          className="w-full max-w-md p-6 bg-white rounded-lg shadow-md"
+          onDrop={onDrop}
+          onDragOver={(e) => e.preventDefault()}
+        ></div>
+
         <label
           htmlFor="audio-file"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-base font-semibold text-gray-700"
         >
           音声ファイルをアップロード
         </label>
         <input
           type="file"
           accept="audio/*"
-          onChange={handleFileChange}
+          onChange={onDrop}
           className="mt-1 block w-full"
         />
       </div>

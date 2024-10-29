@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
 
 export function AudioAnalyzer() {
@@ -51,9 +51,9 @@ export function AudioAnalyzer() {
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
     if (droppedFile && droppedFile.type.startsWith('audio/')) {
-      setFile(droppedFile)
+      setAudioFile(droppedFile)
       setAverageVolume(0)
-      setIsAnalyzing(false)
+      setAnalyzing(false)
     }
   }, [])
 
@@ -152,4 +152,11 @@ export function AudioAnalyzer() {
       )}
     </div>
   )
+}
+function setFile(droppedFile: File) {
+  throw new Error('Function not implemented.')
+}
+
+function setAverageVolume(arg0: number) {
+  throw new Error('Function not implemented.')
 }

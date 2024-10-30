@@ -75,7 +75,7 @@ export function AudioAnalyzer() {
         </p>
       </div>
 
-      <div>
+      <div className="grid place-items-center">
         <div
           className="w-full max-w-md p-6 bg-white rounded-lg shadow-md flex flex-col items-center justify-center border-2 border-dashed border-gray-300"
           onDrop={onDrop}

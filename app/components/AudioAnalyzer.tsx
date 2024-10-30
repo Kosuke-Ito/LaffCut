@@ -99,7 +99,7 @@ export function AudioAnalyzer() {
 
       {results.integratedLUFS !== null && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">解析結果</h3>
+          <h3 className="text-lg font-bold">解析結果</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-sm text-gray-500">LUFS</p>

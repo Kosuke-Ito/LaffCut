@@ -20,6 +20,12 @@ export function AudioAnalyzer() {
       return
     }
 
+    const MAX_FILE_SIZE = 300 * 1024 * 1024 // 例: 100MB
+    if (file.size > MAX_FILE_SIZE) {
+      console.error('ファイルサイズが大きすぎます')
+      return
+    }
+
     setAnalyzing(true)
     try {
       const audioContext = new AudioContext()

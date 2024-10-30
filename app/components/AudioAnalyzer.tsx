@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
 
 export function AudioAnalyzer() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [results, setResults] = useState<{
@@ -22,7 +21,7 @@ export function AudioAnalyzer() {
       const arrayBuffer = await file.arrayBuffer()
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
 
-      // Calculate LUFS (simplified approximation)
+      // LUFSの計算（単純化された近似）
       const channelData = audioBuffer.getChannelData(0)
       let sum = 0
       let peak = 0
@@ -33,15 +32,15 @@ export function AudioAnalyzer() {
       }
 
       const rms = Math.sqrt(sum / channelData.length)
-      const lufs = 20 * Math.log10(rms) - 0.691 // Simplified LUFS calculation
+      const lufs = 20 * Math.log10(rms) - 0.691 // 単純化されたLUFS計算
 
       setResults({
         integratedLUFS: lufs,
         truePeak: 20 * Math.log10(peak),
-        shortTermLUFS: lufs - 2, // Simplified short-term LUFS
+        shortTermLUFS: lufs - 2, // 単純化された短期LUFS
       })
     } catch (error) {
-      console.error('Error analyzing audio:', error)
+      console.error('音声の解析中にエラーが発生しました:', error)
     } finally {
       setAnalyzing(false)
     }
@@ -52,7 +51,7 @@ export function AudioAnalyzer() {
     const droppedFile = e.dataTransfer.files[0]
     if (droppedFile && droppedFile.type.startsWith('audio/')) {
       setAudioFile(droppedFile)
-      setAnalyzing(false)
+      analyzeAudio(droppedFile)
     }
   }, [])
 
@@ -78,27 +77,22 @@ export function AudioAnalyzer() {
 
       <div>
         <div
-          className="w-full max-w-md p-6 bg-white rounded-lg shadow-md"
+          className="w-full max-w-md p-6 bg-white rounded-lg shadow-md flex flex-col items-center justify-center border-2 border-dashed border-gray-300"
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
-        ></div>
-
-        <label
-          htmlFor="audio-file"
-          className="block text-base font-semibold text-gray-700"
         >
-          音声ファイルをアップロード
-        </label>
-        <input
-          type="file"
-          accept="audio/*"
-          onChange={onDrop}
-          className="mt-1 block w-full"
-        />
+          <FileAudio className="w-12 h-12 text-gray-400 mb-4" />
+          {audioFile ? (
+            <p className="text-gray-500">{audioFile.name}</p>
+          ) : (
+            <p className="text-gray-500">ここにファイルをドラッグ＆ドロップ</p>
+          )}
+        </div>
       </div>
 
       {analyzing && (
         <div className="text-center">
+          <Volume2 className="inline-block w-6 h-6 mr-2 animate-pulse" />
           <p>音声を解析中...</p>
         </div>
       )}

@@ -29,7 +29,8 @@ export function AudioAnalyzer() {
     setAnalyzing(true)
     try {
       const audioContext = new AudioContext()
-      const arrayBuffer = await file.arrayBuffer()
+      let arrayBuffer: ArrayBuffer | null = null
+      arrayBuffer = await file.arrayBuffer()
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
 
       // LUFSの計算（単純化された近似）
@@ -50,6 +51,14 @@ export function AudioAnalyzer() {
         truePeak: 20 * Math.log10(peak),
         shortTermLUFS: lufs - 2, // 単純化された短期LUFS
       })
+
+      // 処理後にメモリを解放
+      audioContext.close()
+
+      // 大きなバッファーは明示的に解放
+      if (arrayBuffer) {
+        arrayBuffer = null
+      }
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
     } finally {

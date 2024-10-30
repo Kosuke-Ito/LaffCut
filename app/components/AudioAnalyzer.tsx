@@ -15,6 +15,11 @@ export function AudioAnalyzer() {
   })
 
   const analyzeAudio = async (file: File) => {
+    if (!file.type.startsWith('audio/')) {
+      console.error('不正なファイル形式です')
+      return
+    }
+
     setAnalyzing(true)
     try {
       const audioContext = new AudioContext()

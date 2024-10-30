@@ -52,18 +52,9 @@ export function AudioAnalyzer() {
     const droppedFile = e.dataTransfer.files[0]
     if (droppedFile && droppedFile.type.startsWith('audio/')) {
       setAudioFile(droppedFile)
-      setAverageVolume(0)
       setAnalyzing(false)
     }
   }, [])
-
-  // const onDrop = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0]
-  //   if (file) {
-  //     setAudioFile(file)
-  //     analyzeAudio(file)
-  //   }
-  // }
 
   return (
     <div className="space-y-10">
@@ -152,11 +143,4 @@ export function AudioAnalyzer() {
       )}
     </div>
   )
-}
-function setFile(droppedFile: File) {
-  throw new Error('Function not implemented.')
-}
-
-function setAverageVolume(arg0: number) {
-  throw new Error('Function not implemented.')
 }

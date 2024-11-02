@@ -48,6 +48,7 @@ export function AudioAnalyzer() {
 
       setResults({
         integratedLUFS: lufs,
+        YouTube LUFS: lufs + 14,
         truePeak: 20 * Math.log10(peak),
         shortTermLUFS: lufs - 2, // 単純化された短期LUFS
       })

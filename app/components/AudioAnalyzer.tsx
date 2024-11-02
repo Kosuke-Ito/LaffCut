@@ -6,10 +6,12 @@ export function AudioAnalyzer() {
   const [analyzing, setAnalyzing] = useState(false)
   const [results, setResults] = useState<{
     integratedLUFS: number | null
+    YouTubeLUFS: number | null
     truePeak: number | null
     shortTermLUFS: number | null
   }>({
     integratedLUFS: null,
+    YouTubeLUFS: null,
     truePeak: null,
     shortTermLUFS: null,
   })
@@ -48,7 +50,7 @@ export function AudioAnalyzer() {
 
       setResults({
         integratedLUFS: lufs,
-        YouTube LUFS: lufs + 14,
+        YouTubeLUFS: lufs + 14,
         truePeak: 20 * Math.log10(peak),
         shortTermLUFS: lufs - 2, // 単純化された短期LUFS
       })
@@ -121,7 +123,7 @@ export function AudioAnalyzer() {
       {results.integratedLUFS !== null && (
         <div className="space-y-4">
           <h3 className="text-lg font-bold">解析結果</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-sm text-gray-500">LUFS</p>
               <p className="text-2xl font-bold">
@@ -129,6 +131,17 @@ export function AudioAnalyzer() {
               </p>
               <p className="text-xs text-gray-400">
                 音声の全体的なラウドネスを示す指標で、音量の一貫性を評価するのに役立ちます。
+              </p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded">
+              <p className="text-sm text-gray-500">YouTube LUFS</p>
+              <p className="text-2xl font-bold">
+                {results.YouTubeLUFS !== null
+                  ? `${results.YouTubeLUFS.toFixed(1)} LUFS`
+                  : '計測不能'}
+              </p>
+              <p className="text-xs text-gray-400">
+                YouTubeの推奨LUFSを示す指標で、音量の一貫性を評価するのに役立ちます。
               </p>
             </div>
             <div className="bg-gray-50 p-4 rounded">

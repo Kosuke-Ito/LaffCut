@@ -9,13 +9,9 @@ export function AudioAnalyzer() {
   const [results, setResults] = useState<{
     integratedLUFS: number | null
     YouTubeLUFS: number | null
-    truePeak: number | null
-    shortTermLUFS: number | null
   }>({
     integratedLUFS: null,
     YouTubeLUFS: null,
-    truePeak: null,
-    shortTermLUFS: null,
   })
 
   const analyzeAudio = async (file: File) => {
@@ -78,8 +74,6 @@ export function AudioAnalyzer() {
       setResults({
         integratedLUFS: lufs,
         YouTubeLUFS: lufs + 14,
-        truePeak: calculateTruePeak(channelData),
-        shortTermLUFS: calculateShortTermLUFS(filtered),
       })
 
       // 処理後にメモリを解放
@@ -169,28 +163,6 @@ export function AudioAnalyzer() {
               </p>
               <p className="text-xs text-gray-400">
                 YouTubeの推奨LUFSを示す指標で、音量の一貫性を評価するのに役立ちます。
-              </p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <p className="text-sm text-gray-500">True Peak</p>
-              <p className="text-2xl font-bold">
-                {results.truePeak !== null
-                  ? `${results.truePeak.toFixed(1)} dB`
-                  : '計測不能'}
-              </p>
-              <p className="text-xs text-gray-400">
-                一番大きな音のレベルを示し、音が割れる（クリッピング）可能性を確認するのに役立ちます。
-              </p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <p className="text-sm text-gray-500">Short-term LUFS</p>
-              <p className="text-2xl font-bold">
-                {results.shortTermLUFS !== null
-                  ? `${results.shortTermLUFS.toFixed(1)} LUFS`
-                  : '計測不能'}
-              </p>
-              <p className="text-xs text-gray-400">
-                短期間のラウドネスを表す指標で、音声の一時的な音量変化を評価するのに使用されます。
               </p>
             </div>
           </div>

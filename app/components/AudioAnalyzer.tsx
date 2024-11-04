@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
+import { applyKWeighting, applyGating } from '~/utils/loudnessUtils'
+import { audioBufferToWav } from '~/utils/wavUtils'
 
 export function AudioAnalyzer() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -21,7 +23,24 @@ export function AudioAnalyzer() {
       console.error('不正なファイル形式です')
       return
     }
+    // MP3ファイルの場合、WAVに変換
+    if (file.type === 'audio/mpeg') {
+      const audioContext = new AudioContext()
+      const arrayBuffer = await file.arrayBuffer()
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
 
+      // WAVファイルとしてエクスポート
+      const wavBuffer = audioBufferToWav(audioBuffer)
+      const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' })
+      file = new File([wavBlob], file.name.replace('.mp3', '.wav'), {
+        type: 'audio/wav',
+      })
+
+      // メモリ解放
+      audioContext.close()
+    }
+
+    // ファイルサイズが大きすぎると負荷をかけるのでチェック
     const MAX_FILE_SIZE = 300 * 1024 * 1024 // 例: 100MB
     if (file.size > MAX_FILE_SIZE) {
       console.error('ファイルサイズが大きすぎます')
@@ -179,86 +198,4 @@ export function AudioAnalyzer() {
       )}
     </div>
   )
-}
-
-// K重み付けフィルタの実装
-const applyKWeighting = (
-  data: Float32Array,
-  sampleRate: number
-): Float32Array => {
-  // フィルタ設計のためにIIRフィルタを使用
-  // フィルタ係数はITU-R BS.1770-4の規格に従う
-  const b = [
-    /* フィルタの分子係数 */
-  ]
-  const a = [
-    /* フィルタの分母係数 */
-  ]
-  // フィルタを適用
-  const filteredData = iirFilter(data, b, a)
-  return filteredData
-}
-
-// IIRフィルタの適用関数
-const iirFilter = (
-  data: Float32Array,
-  b: number[],
-  a: number[]
-): Float32Array => {
-  const output = new Float32Array(data.length)
-  // フィルタリングの実装
-  // ...
-  return output
-}
-
-// 統合ラウドネスの計算
-const calculateIntegratedLoudness = (
-  data: Float32Array,
-  sampleRate: number
-): number => {
-  const blockSize = Math.floor(0.4 * sampleRate) // 400ms
-
-  // ブロックごとのエネルギー計算
-  const energies: number[] = []
-  let i = 0
-  const step = Math.floor(blockSize * 0.75) // 75%オーバーラップ
-  while (i + blockSize <= data.length) {
-    const block = data.slice(i, i + blockSize)
-    const power = calculateBlockEnergy(block)
-    energies.push(power)
-    i += step
-  }
-
-  // 絶対ゲート（-70 LUFS）を適用
-  const absoluteThreshold = -70
-  const gatedEnergies = energies.filter((energy) => {
-    const l = -0.691 + 10 * Math.log10(energy)
-    return l > absoluteThreshold
-  })
-
-  // 相対ゲート（平均から-10 LU）を適用
-  const meanEnergy =
-    gatedEnergies.reduce((sum, val) => sum + val, 0) / gatedEnergies.length
-  const relativeThreshold = 10 * Math.log10(meanEnergy) - 10
-  const finalGatedEnergies = gatedEnergies.filter((energy) => {
-    const l = 10 * Math.log10(energy)
-    return l > relativeThreshold
-  })
-
-  // 統合ラウドネスの計算
-  const integratedEnergy =
-    finalGatedEnergies.reduce((sum, val) => sum + val, 0) /
-    finalGatedEnergies.length
-  const integratedLoudness = -0.691 + 10 * Math.log10(integratedEnergy)
-
-  return integratedLoudness
-}
-
-// ブロックのエネルギー計算
-const calculateBlockEnergy = (block: Float32Array): number => {
-  let sum = 0
-  for (let i = 0; i < block.length; i++) {
-    sum += block[i] * block[i]
-  }
-  return sum / block.length
 }

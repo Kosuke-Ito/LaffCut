@@ -78,11 +78,6 @@ export function AudioAnalyzer() {
 
       // 処理後にメモリを解放
       audioContext.close()
-
-      // 大きなバッファーは明示的に解放
-      if (arrayBuffer) {
-        arrayBuffer = null
-      }
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
     } finally {

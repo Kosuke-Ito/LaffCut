@@ -31,7 +31,7 @@ export const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
   /* data chunk length */
   view.setUint32(40, buffer.length * numOfChan * 2, true)
 
-  // PCM samples
+  // PCM sample
   const channels = []
   for (let i = 0; i < numOfChan; i++) {
     channels.push(buffer.getChannelData(i))

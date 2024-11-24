@@ -6,9 +6,9 @@
 
 import { PassThrough } from 'node:stream'
 
-import type { AppLoadContext, EntryContext } from 'react-router';
-import { createReadableStreamFromReadable } from '@react-router/node';
-import { ServerRouter } from 'react-router';
+import type { AppLoadContext, EntryContext } from 'react-router'
+import { createReadableStreamFromReadable } from '@react-router/node'
+import { ServerRouter } from 'react-router'
 import { isbot } from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
 
@@ -34,7 +34,7 @@ export default function handleRequest(
         responseStatusCode,
         responseHeaders,
         reactRouterContext
-      );
+      )
 }
 
 function handleBotRequest(
@@ -79,8 +79,8 @@ function handleBotRequest(
       }
     )
 
-    setTimeout(abort, ABORT_DELAY)
-  });
+    setTimeout(abort)
+  })
 }
 
 function handleBrowserRequest(
@@ -92,11 +92,7 @@ function handleBrowserRequest(
   return new Promise((resolve, reject) => {
     let shellRendered = false
     const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter
-        context={reactRouterContext}
-        url={request.url}
-        abortDelay={ABORT_DELAY}
-      />,
+      <ServerRouter context={reactRouterContext} url={request.url} />,
       {
         onShellReady() {
           shellRendered = true
@@ -129,6 +125,6 @@ function handleBrowserRequest(
       }
     )
 
-    setTimeout(abort, ABORT_DELAY)
-  });
+    setTimeout(abort)
+  })
 }

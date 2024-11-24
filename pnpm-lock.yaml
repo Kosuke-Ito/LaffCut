@@ -18,7 +18,7 @@ dependencies:
     specifier: ^7.0.1
     version: 7.0.1(@react-router/dev@7.0.1)(typescript@5.6.3)
   '@react-router/node':
-    specifier: ^7.0.0
+    specifier: ^7.0.1
     version: 7.0.1(react-router@7.0.1)(typescript@5.6.3)
   '@react-router/serve':
     specifier: ^7.0.0

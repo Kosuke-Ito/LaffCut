@@ -59,7 +59,7 @@ dependencies:
 
 devDependencies:
   '@react-router/dev':
-    specifier: ^7.0.0
+    specifier: ^7.0.1
     version: 7.0.1(@react-router/serve@7.0.1)(react-router@7.0.1)(typescript@5.6.3)(vite@5.4.8)
   '@react-router/remix-routes-option-adapter':
     specifier: ^7.0.0

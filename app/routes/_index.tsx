@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { MetaFunction } from '@remix-run/node'
+import type { MetaFunction } from 'react-router';
 import { AudioAnalyzer } from '~/components/AudioAnalyzer'
 import { SubtitleConverter } from '~/components/SubtitleConverter'
 

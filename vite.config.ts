@@ -12,7 +12,6 @@ declare module '@remix-run/node' {
 export default defineConfig({
   plugins: [
     remix({
-      ignoredRouteFiles: ['**/*.css'],
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,

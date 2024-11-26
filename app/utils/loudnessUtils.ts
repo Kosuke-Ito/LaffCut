@@ -32,10 +32,7 @@ export const applyGating = (blocks: number[]): number[] => {
 }
 
 // K重み付けフィルタの実装
-export const applyKWeighting = (
-  data: Float32Array,
-  sampleRate: number
-): Float32Array => {
+export const applyKWeighting = (data: Float32Array): Float32Array => {
   if (!data || data.length === 0) {
     throw new Error('data が無効です。')
   }

@@ -3,6 +3,7 @@
  * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
  * For more information, see https://remix.run/file-conventions/entry.server
  */
+export const streamTimeout = 5000
 
 import { PassThrough } from 'node:stream'
 
@@ -79,7 +80,7 @@ function handleBotRequest(
       }
     )
 
-    setTimeout(abort)
+    setTimeout(abort, streamTimeout + 1000)
   })
 }
 
@@ -125,6 +126,6 @@ function handleBrowserRequest(
       }
     )
 
-    setTimeout(abort)
+    setTimeout(abort, streamTimeout + 1000)
   })
 }

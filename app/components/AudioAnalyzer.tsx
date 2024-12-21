@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
 import { applyKWeighting, applyGating } from '~/utils/loudnessUtils'
-import { audioBufferToWav } from '~/utils/wavUtils'
 
 export function AudioAnalyzer() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -16,41 +15,40 @@ export function AudioAnalyzer() {
 
   const analyzeAudio = async (file: File) => {
     if (!file.type.startsWith('audio/')) {
-      console.error('不正なファイル形式です')
+      alert(
+        '不正なファイル形式です。音声ファイル（WAV、MP3など）を選択してください。'
+      )
       return
     }
-    // MP3ファイルの場合、WAVに変換
-    if (file.type === 'audio/mpeg') {
-      const audioContext = new AudioContext()
-      const arrayBuffer = await file.arrayBuffer()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
 
-      // WAVファイルとしてエクスポート
-      const wavBuffer = audioBufferToWav(audioBuffer)
-      const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' })
-      file = new File([wavBlob], file.name.replace('.mp3', '.wav'), {
-        type: 'audio/wav',
-      })
-
-      // メモリ解放
-      audioContext.close()
-    }
-
-    // ファイルサイズが大きすぎると負荷をかけるのでチェック
-    const MAX_FILE_SIZE = 300 * 1024 * 1024 // 例: 100MB
+    // ファイルサイズチェック
+    const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300MB
     if (file.size > MAX_FILE_SIZE) {
-      console.error('ファイルサイズが大きすぎます')
+      alert('ファイルサイズが大きすぎます（上限: 300MB）')
       return
     }
 
     setAnalyzing(true)
     try {
-      const audioContext = new AudioContext()
-      const arrayBuffer = await file.arrayBuffer()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-      const channelData = audioBuffer.getChannelData(0)
+      const audioContext = new AudioContext({
+        sampleRate: 48000, // サンプルレートを48kHzに固定
+      })
 
-      // K重み付けフィルタの適用
+      const arrayBuffer = await file.arrayBuffer()
+      let audioBuffer
+
+      try {
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+      } catch (decodeError) {
+        console.error('音声のデコードに失敗しました:', decodeError)
+        alert(
+          '音声ファイルの読み込みに失敗しました。ファイルが破損しているか、対応していない形式の可能性があります。'
+        )
+        setAnalyzing(false)
+        return
+      }
+
+      const channelData = audioBuffer.getChannelData(0)
       const filtered = applyKWeighting(channelData, audioContext.sampleRate)
 
       // ブロック分析（400ms）
@@ -76,10 +74,11 @@ export function AudioAnalyzer() {
         YouTubeLUFS: lufs + 14,
       })
 
-      // 処理後にメモリを解放
+      // メモリ解放
       audioContext.close()
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
+      alert('音声の解析中にエラーが発生しました。')
     } finally {
       setAnalyzing(false)
     }
@@ -124,7 +123,7 @@ export function AudioAnalyzer() {
           {audioFile ? (
             <p className="text-gray-500">{audioFile.name}</p>
           ) : (
-            <p className="text-gray-500">ここにファイルをドラッグ＆ドロップ</p>
+            <p className="text-gray-500">ここにファイルをドラッ＆ドロップ</p>
           )}
         </div>
       </div>

@@ -23,12 +23,30 @@ export const applyGating = (blocks: number[]): number[] => {
   const absoluteThreshold = -70 // 絶対ゲートの閾値（LUFS）
   const relativeThreshold = meanLoudness - 10 // 相対ゲートの閾値（LUFS）
 
-  // ゲーティング適用：絶対閾値と相対閾値を両方満たすブロックのみ���保持
+  // ゲーティング適用：絶対閾値と相対閾値を両方満たすブロックのみ保持
   const gatedBlocks = lufsBlocks.filter(
     (lufs) => lufs > absoluteThreshold && lufs > relativeThreshold
   )
 
   return gatedBlocks
+}
+
+// 配列の最大値を計算する補助関数
+const getArrayMax = (arr: Float32Array | number[]): number => {
+  let max = -Infinity
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] > max) max = arr[i]
+  }
+  return max
+}
+
+// 配列の最小値を計算する補助関数
+const getArrayMin = (arr: Float32Array | number[]): number => {
+  let min = Infinity
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] < min) min = arr[i]
+  }
+  return min
 }
 
 // K重み付けフィルタの実装
@@ -43,17 +61,30 @@ export const applyKWeighting = (
     throw new Error('sampleRate は正の値でなければなりません。')
   }
 
+  console.log('K重み付け前のデータ統計:', {
+    length: data.length,
+    sampleRate,
+    max: getArrayMax(data),
+    min: getArrayMin(data),
+    hasNaN: data.some((x) => isNaN(x)),
+  })
+
   // フィルタ設計のためにIIRフィルタを使用
   // フィルタ係数はITU-R BS.1770-4の規格に従う
   // 48kHzのサンプルレートを基準とした係数
   const b = [1.53512485958697, -2.69169618940638, 1.19839281085285]
   const a = [1.0, -1.69065929318241, 0.73248077421585]
 
-  // サンプルレートが48kHz以外の場合は係数を調整する必要がありますが、
-  // 簡略化のため現在は48kHz用の係数をそのまま使用
-
   // フィルタを適用
   const filteredData = iirFilter(data, b, a)
+
+  console.log('K重み付け後のデータ統計:', {
+    length: filteredData.length,
+    max: getArrayMax(filteredData),
+    min: getArrayMin(filteredData),
+    hasNaN: filteredData.some((x) => isNaN(x)),
+  })
+
   return filteredData
 }
 
@@ -115,19 +146,35 @@ export const calculateIntegratedLoudness = (
   while (i + blockSize <= data.length) {
     const block = data.slice(i, i + blockSize)
     const power = calculateBlockEnergy(block)
-    energies.push(power)
+    if (!isNaN(power) && power > 0) {
+      // 有効な値のみを追加
+      energies.push(power)
+    }
     i += step
   }
 
+  console.log('ブロックエネルギー統計:', {
+    blockCount: energies.length,
+    maxEnergy: getArrayMax(energies),
+    minEnergy: getArrayMin(energies),
+    hasNaN: energies.some((x) => isNaN(x)),
+  })
+
   if (energies.length === 0) {
-    throw new Error('エネルギーブロックが存在しません。')
+    throw new Error('有効なエネルギーブロックが存在しません。')
   }
 
   // 絶対ゲート（-70 LUFS）を適用
   const absoluteThreshold = -70
   const gatedEnergies = energies.filter((energy) => {
     const l = -0.691 + 10 * Math.log10(energy)
-    return l > absoluteThreshold
+    return l > absoluteThreshold && !isNaN(l)
+  })
+
+  console.log('絶対ゲート後の統計:', {
+    blockCount: gatedEnergies.length,
+    maxEnergy: getArrayMax(gatedEnergies),
+    minEnergy: getArrayMin(gatedEnergies),
   })
 
   if (gatedEnergies.length === 0) {
@@ -140,11 +187,17 @@ export const calculateIntegratedLoudness = (
   const relativeThreshold = 10 * Math.log10(meanEnergy) - 10
   const finalGatedEnergies = gatedEnergies.filter((energy) => {
     const l = 10 * Math.log10(energy)
-    return l > relativeThreshold
+    return l > relativeThreshold && !isNaN(l)
+  })
+
+  console.log('相対ゲート後の統計:', {
+    blockCount: finalGatedEnergies.length,
+    maxEnergy: getArrayMax(finalGatedEnergies),
+    minEnergy: getArrayMin(finalGatedEnergies),
   })
 
   if (finalGatedEnergies.length === 0) {
-    throw new Error('相対��ーティング後のエネルギーブロックが存在しません。')
+    throw new Error('相対ゲーティング後のエネルギーブロックが存在しません。')
   }
 
   // 統合ラウドネスの計算
@@ -152,6 +205,11 @@ export const calculateIntegratedLoudness = (
     finalGatedEnergies.reduce((sum, val) => sum + val, 0) /
     finalGatedEnergies.length
   const integratedLoudness = -0.691 + 10 * Math.log10(integratedEnergy)
+
+  console.log('最終結果:', {
+    integratedEnergy,
+    integratedLoudness,
+  })
 
   return integratedLoudness
 }

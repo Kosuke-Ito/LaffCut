@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
-import { applyKWeighting, applyGating } from '~/utils/loudnessUtils'
+import {
+  applyKWeighting,
+  calculateIntegratedLoudness,
+} from '~/utils/loudnessUtils'
 
 export function AudioAnalyzer() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -48,30 +51,47 @@ export function AudioAnalyzer() {
         return
       }
 
-      const channelData = audioBuffer.getChannelData(0)
-      const filtered = applyKWeighting(channelData, audioContext.sampleRate)
-
-      // ブロック分析（400ms）
-      const blockSize = Math.floor(0.4 * audioContext.sampleRate)
-      const blocks = []
-      for (let i = 0; i < filtered.length; i += blockSize) {
-        const block = filtered.slice(i, i + blockSize)
-        if (block.length === blockSize) {
-          const blockPower =
-            block.reduce((sum, sample) => sum + sample * sample, 0) / blockSize
-          blocks.push(blockPower)
+      // ステレオの場合は両チャンネルの平均を取る
+      let channelData: Float32Array
+      if (audioBuffer.numberOfChannels === 2) {
+        const left = audioBuffer.getChannelData(0)
+        const right = audioBuffer.getChannelData(1)
+        channelData = new Float32Array(left.length)
+        for (let i = 0; i < left.length; i++) {
+          channelData[i] = (left[i] + right[i]) / 2
         }
+      } else {
+        channelData = audioBuffer.getChannelData(0)
       }
 
-      // 相対ゲーティングの適用
-      const gatedBlocks = applyGating(blocks)
-      const meanSquare =
-        gatedBlocks.reduce((sum, power) => sum + power, 0) / gatedBlocks.length
-      const lufs = -0.691 + 10 * Math.log10(meanSquare)
+      // 最大値と最小値を計算
+      let max = -Infinity
+      let min = Infinity
+      for (let i = 0; i < channelData.length; i++) {
+        if (channelData[i] > max) max = channelData[i]
+        if (channelData[i] < min) min = channelData[i]
+      }
+
+      console.log('音声データ統計:', {
+        channels: audioBuffer.numberOfChannels,
+        sampleRate: audioBuffer.sampleRate,
+        duration: audioBuffer.duration,
+        length: channelData.length,
+        max,
+        min,
+      })
+
+      const filtered = applyKWeighting(channelData, audioContext.sampleRate)
+
+      // 統合ラウドネスを計算
+      const lufs = calculateIntegratedLoudness(
+        filtered,
+        audioContext.sampleRate
+      )
 
       setResults({
         integratedLUFS: lufs,
-        YouTubeLUFS: lufs + 14,
+        YouTubeLUFS: lufs + 16,
       })
 
       // メモリ解放
@@ -107,7 +127,7 @@ export function AudioAnalyzer() {
             href="https://support.google.com/youtube/answer/1722171?hl=ja"
             className="text-blue-500 underline"
           >
-            YouTubeのエンコード設定推奨
+            YouTubeエンコード設定推奨
           </a>{' '}
           を参照してください。
         </p>
@@ -138,27 +158,46 @@ export function AudioAnalyzer() {
       {results.integratedLUFS !== null && (
         <div className="space-y-4">
           <h3 className="text-lg font-bold">解析結果</h3>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded">
-              <p className="text-sm text-gray-500">LUFS</p>
+              <p className="text-sm text-gray-500">現在の音量</p>
               <p className="text-2xl font-bold">
-                {results.integratedLUFS.toFixed(1)}
+                {results.integratedLUFS.toFixed(1)} LUFS
               </p>
               <p className="text-xs text-gray-400">
-                音声の全体的なラウドネスを示す指標で、音量の一貫性を評価するのに役立ちます。
+                音声全体の平均的な音量を表します
               </p>
             </div>
             <div className="bg-gray-50 p-4 rounded">
-              <p className="text-sm text-gray-500">YouTube LUFS</p>
+              <p className="text-sm text-gray-500">YouTube処理後の予測音量</p>
               <p className="text-2xl font-bold">
-                {results.YouTubeLUFS !== null
-                  ? `${results.YouTubeLUFS.toFixed(1)} LUFS`
-                  : '計測不能'}
+                {results.YouTubeLUFS?.toFixed(1) ?? '計測不能'} LUFS
               </p>
               <p className="text-xs text-gray-400">
-                YouTubeの推奨LUFSを示す指標で、音量の一貫性を評価するのに役立ちます。
+                YouTubeがノーマライズを適用した後の予測値です
               </p>
             </div>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded">
+            <h4 className="font-medium mb-2">音量調整の推奨</h4>
+            {results.integratedLUFS > -14 ? (
+              <p className="text-sm">
+                現在の音量は推奨範囲より大きいため、YouTubeで自動的に音量が下げられる可能性があります。
+                {Math.abs(results.integratedLUFS + 14).toFixed(1)}
+                dB程度の音量低下をお勧めします。
+              </p>
+            ) : results.integratedLUFS < -14 ? (
+              <p className="text-sm">
+                現在の音量は推奨範囲より小さいため、YouTubeで自動的に音量が上げられます。より良い音質を得るために、
+                {Math.abs(results.integratedLUFS + 14).toFixed(1)}
+                dB程度の音量増加をお勧めします。
+              </p>
+            ) : (
+              <p className="text-sm">
+                現在の音量は推奨範囲内です。調整の必要��ありません。
+              </p>
+            )}
           </div>
         </div>
       )}

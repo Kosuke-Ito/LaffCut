@@ -39,7 +39,21 @@ Make sure to deploy the output of `npm run build`
 
 This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever css framework you prefer. See the [Vite docs on css](https://vitejs.dev/guide/features.html#css) for more information.
 
-  現在は、AudioAnalyzerとSubtitleConverterの2つの機能があります。
 
-  AudioAnalyzerは、音声ファイルをアップロードして、音量を解析します。
-  SubtitleConverterは、サブタイトルファイルをアップロードして、サブタイトルを変換します。
+## 現在の機能
+現在は、AudioAnalyzerとSubtitleConverterの2つの機能があります。
+
+AudioAnalyzerは、音声ファイルをアップロードして、音量を解析します。
+SubtitleConverterは、サブタイトルファイルをアップロードして、サブタイトルを変換します。
+
+### 機能
+  それぞれの機能について、以下のように使用できます。
+
+  AudioAnalyzer:
+  - 音声ファイルをアップロードして、音量を解析します。
+  - 音量のデータをグラフで表示します。
+  - 音量のデータをCSVファイルでダウンロードできます。
+
+  SubtitleConverter:
+  - srt形式のサブタイトルファイルをアップロードして、fcpxml形式のサブタイトルを変換します。
+  - 変換後のサブタイトルファイルをダウンロードできます。

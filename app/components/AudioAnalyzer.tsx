@@ -118,8 +118,8 @@ export function AudioAnalyzer() {
       <div className="bg-slate-50 p-4 rounded">
         <h3 className="text-lg font-medium">YouTubeアップロード推奨設定</h3>
         <ul className="list-disc pl-5 space-y-1">
-          <li>推奨LUFS：-10 ~ -14 LUFS</li>
-          <li>True Peak制限：-1 dBTP</li>
+          <li>推奨LUFS: -10 ~ -14 LUFS</li>
+          <li>True Peak制限: -1 dBTP</li>
         </ul>
         <p className="text-xs text-gray-500">
           詳細は{' '}
@@ -195,7 +195,7 @@ export function AudioAnalyzer() {
               </p>
             ) : (
               <p className="text-sm">
-                現在の音量は推奨範囲内です。調整の必要��ありません。
+                現在の音量は推奨範囲内です。調整の必要はありません。
               </p>
             )}
           </div>

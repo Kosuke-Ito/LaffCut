@@ -27,7 +27,7 @@ export default function Index() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="flex space-x-4 mb-6">
           <button
-            className={`text-xl font-bold px-8 py-4 rounded border border-2 ${
+            className={`text-xl font-bold px-8 py-4 rounded border-2 ${
               activeTab === 'audio'
                 ? 'bg-black text-white border-white'
                 : 'bg-white text-black border-black'
@@ -37,7 +37,7 @@ export default function Index() {
             Audio Analysis
           </button>
           <button
-            className={`text-xl font-bold px-8 py-4 rounded border border-2 ${
+            className={`text-xl font-bold px-8 py-4 rounded border-2 ${
               activeTab === 'subtitle'
                 ? 'bg-black text-white border-white'
                 : 'bg-white text-black border-black'

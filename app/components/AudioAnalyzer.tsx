@@ -107,10 +107,9 @@ export function AudioAnalyzer() {
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile && droppedFile.type.startsWith('audio/')) {
-      setAudioFile(droppedFile)
-      analyzeAudio(droppedFile)
-    }
+    console.log('droppedFile:', droppedFile)
+    setAudioFile(droppedFile)
+    analyzeAudio(droppedFile)
   }, [])
 
   return (

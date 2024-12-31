@@ -33,7 +33,7 @@ export const applyGating = (blocks: number[]): number[] => {
 }
 
 // 配列の最大値を計算する補助関数
-export const getArrayMax = (arr: Float32Array | number[]): number => {
+const getArrayMax = (arr: Float32Array | number[]): number => {
   let max = -Infinity
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] > max) max = arr[i]
@@ -42,7 +42,7 @@ export const getArrayMax = (arr: Float32Array | number[]): number => {
 }
 
 // 配列の最小値を計算する補助関数
-export const getArrayMin = (arr: Float32Array | number[]): number => {
+const getArrayMin = (arr: Float32Array | number[]): number => {
   let min = Infinity
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] < min) min = arr[i]
@@ -73,6 +73,7 @@ export const applyKWeighting = (
     max: getArrayMax(data),
     min: getArrayMin(data),
     hasNaN: data.some((x) => isNaN(x)),
+    power: calculateBlockEnergy(data),
   })
 
   // フィルタ設計のためにIIRフィルタを使用
@@ -236,7 +237,7 @@ export const calculateIntegratedLoudness = (
  * @param block - ブロック
  * @returns エネルギー
  */
-export const calculateBlockEnergy = (block: Float32Array): number => {
+const calculateBlockEnergy = (block: Float32Array): number => {
   if (!block || block.length === 0) {
     throw new Error('block が無効です。')
   }

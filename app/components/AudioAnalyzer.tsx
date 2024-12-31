@@ -4,9 +4,6 @@ import {
   applyKWeighting,
   calculateIntegratedLoudness,
   convertToMono,
-  getArrayMax,
-  getArrayMin,
-  calculateBlockEnergy,
 } from '~/utils/loudnessUtils'
 
 export function AudioAnalyzer() {
@@ -64,21 +61,7 @@ export function AudioAnalyzer() {
           ? convertToMono(audioBuffer)
           : audioBuffer.getChannelData(0)
 
-      // 最大値と最小値を計算
-      const max = getArrayMax(channelData)
-      const min = getArrayMin(channelData)
-      const power = calculateBlockEnergy(channelData)
-
-      console.log('音声データ統計:', {
-        channels: audioBuffer.numberOfChannels,
-        sampleRate: audioBuffer.sampleRate,
-        duration: audioBuffer.duration,
-        length: channelData.length,
-        max,
-        min,
-        power,
-      })
-
+      // K重み付けフィルタを適用
       const filtered = applyKWeighting(channelData, audioContext.sampleRate)
 
       // 統合ラウドネスを計算

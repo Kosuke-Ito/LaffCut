@@ -3,6 +3,7 @@ import { FileAudio, Volume2 } from 'lucide-react'
 import {
   applyKWeighting,
   calculateIntegratedLoudness,
+  convertToMono,
 } from '~/utils/loudnessUtils'
 
 export function AudioAnalyzer() {
@@ -54,18 +55,11 @@ export function AudioAnalyzer() {
         return
       }
 
-      // ステレオの場合は両チャンネルの平均を取る
-      let channelData: Float32Array
-      if (audioBuffer.numberOfChannels === 2) {
-        const left = audioBuffer.getChannelData(0)
-        const right = audioBuffer.getChannelData(1)
-        channelData = new Float32Array(left.length)
-        for (let i = 0; i < left.length; i++) {
-          channelData[i] = (left[i] + right[i]) / 2
-        }
-      } else {
-        channelData = audioBuffer.getChannelData(0)
-      }
+      // ステレオの場合はモノラルに変換
+      const channelData: Float32Array =
+        audioBuffer.numberOfChannels === 2
+          ? convertToMono(audioBuffer)
+          : audioBuffer.getChannelData(0)
 
       // 最大値と最小値を計算
       let max = -Infinity

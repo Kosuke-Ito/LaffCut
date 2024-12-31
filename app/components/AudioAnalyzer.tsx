@@ -33,14 +33,17 @@ export function AudioAnalyzer() {
 
     setAnalyzing(true)
     try {
+      // web audio apiのAudioContextをサンプルレート48kHzに固定して作成
       const audioContext = new AudioContext({
-        sampleRate: 48000, // サンプルレートを48kHzに固定
+        sampleRate: 48000,
       })
 
+      // アップロードされた音声データのバッファを変数に格納
       const arrayBuffer = await file.arrayBuffer()
       let audioBuffer
 
       try {
+        // デコードされた AudioBuffer は AudioContext のサンプリングレート(48kHz)にリサンプリングされます
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
       } catch (decodeError) {
         console.error('音声のデコードに失敗しました:', decodeError)

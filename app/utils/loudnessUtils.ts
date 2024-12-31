@@ -33,7 +33,7 @@ export const applyGating = (blocks: number[]): number[] => {
 }
 
 // 配列の最大値を計算する補助関数
-const getArrayMax = (arr: Float32Array | number[]): number => {
+export const getArrayMax = (arr: Float32Array | number[]): number => {
   let max = -Infinity
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] > max) max = arr[i]
@@ -42,7 +42,7 @@ const getArrayMax = (arr: Float32Array | number[]): number => {
 }
 
 // 配列の最小値を計算する補助関数
-const getArrayMin = (arr: Float32Array | number[]): number => {
+export const getArrayMin = (arr: Float32Array | number[]): number => {
   let min = Infinity
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] < min) min = arr[i]
@@ -246,4 +246,26 @@ export const calculateBlockEnergy = (block: Float32Array): number => {
     sum += block[i] * block[i]
   }
   return sum / block.length
+}
+
+/**
+ * ステレオ音声データをモノラル音声データに変換する関数
+ * @param audioBuffer - ステレオ音声データ
+ * @returns モノラル音声データ
+ */
+export const convertToMono = (audioBuffer: AudioBuffer): Float32Array => {
+  if (audioBuffer.numberOfChannels === 1) {
+    return audioBuffer.getChannelData(0)
+  }
+
+  const left = audioBuffer.getChannelData(0)
+  const right = audioBuffer.getChannelData(1)
+  const length = left.length
+  const monoData = new Float32Array(length)
+
+  for (let i = 0; i < length; i++) {
+    monoData[i] = (left[i] + right[i]) / 2
+  }
+
+  return monoData
 }

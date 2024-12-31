@@ -1,4 +1,5 @@
 /**
+ * ゲーティング処理
  * ゲーティング処理を適用して有効なブロックのみを返します。
  * ITU-R BS.1770-4 規格に基づく絶対ゲート（-70 LUFS）と相対ゲート（平均ラウドネス - 10 LUFS）を適用します。
  *
@@ -49,7 +50,12 @@ const getArrayMin = (arr: Float32Array | number[]): number => {
   return min
 }
 
-// K重み付けフィルタの実装
+/**
+ * K重み付けフィルタの実装
+ * @param data - データ
+ * @param sampleRate - サンプルレート
+ * @returns フィルタ適用後のデータ
+ */
 export const applyKWeighting = (
   data: Float32Array,
   sampleRate: number
@@ -88,7 +94,13 @@ export const applyKWeighting = (
   return filteredData
 }
 
-// IIRフィルタの適用関数
+/**
+ * IIRフィルタの適用関数
+ * @param data - データ
+ * @param b - フィルタ係数
+ * @param a - フィルタ係数
+ * @returns フィルタ適用後のデータ
+ */
 export const iirFilter = (
   data: Float32Array,
   b: number[],
@@ -125,7 +137,12 @@ export const iirFilter = (
   return output
 }
 
-// 統合ラウドネスの計算
+/**
+ * 統合ラウドネスの計算
+ * @param data - データ
+ * @param sampleRate - サンプルレート
+ * @returns 統合ラウドネス
+ */
 export const calculateIntegratedLoudness = (
   data: Float32Array,
   sampleRate: number
@@ -214,7 +231,11 @@ export const calculateIntegratedLoudness = (
   return integratedLoudness
 }
 
-// ブロックのエネルギー計算
+/**
+ * ブロックのエネルギー計算
+ * @param block - ブロック
+ * @returns エネルギー
+ */
 export const calculateBlockEnergy = (block: Float32Array): number => {
   if (!block || block.length === 0) {
     throw new Error('block が無効です。')

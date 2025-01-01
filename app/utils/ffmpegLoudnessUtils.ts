@@ -1,36 +1,48 @@
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
-export async function measureLoudnessWithFFmpeg(
-  inputFile: File
-): Promise<void> {
-  const ffmpeg = createFFmpeg({
-    log: true, // デバッグ情報を取得したい場合には true
-  })
+const ffmpeg = new FFmpeg()
+const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd'
 
-  // on('stderr')等を使ってログをキャプチャ
-  ffmpeg.setLogger(({ type, message }) => {
-    if (type === 'fferr') {
-      console.log('[FFmpeg stderr]', message)
-      // ここで ebur128 の結果をパースし、ラウドネス数値を抽出できる
-      // 例えば "Integrated loudness:" や "LRA:" などの行を正規表現で探す
-    }
-  })
+await ffmpeg.load({
+  coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+  wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+})
 
-  // FFmpeg.wasm の読み込み
-  await ffmpeg.load()
+export const calculateLoudness = async (audioFile: File): Promise<number> => {
+  if (!ffmpeg.loaded) {
+    await ffmpeg.load()
+  }
 
-  // 入力ファイル（例えば WAV など）をメモリ上の FS に書き込み
-  ffmpeg.FS('writeFile', 'input.wav', await fetchFile(inputFile))
+  // ファイルをffmpegのファイルシステムに書き込み
+  await ffmpeg.writeFile('input.mp3', await fetchFile(audioFile))
 
-  // ffmpeg コマンド実行 (EPUB R128 で分析する例)
-  // -analyzeduration や -probesize の指定は状況に応じて追加
-  await ffmpeg.run('-i', 'input.wav', '-af', 'ebur128', '-f', 'null', '-')
+  // ebur128フィルタを使用してラウドネスを測定
+  await ffmpeg.exec([
+    '-i',
+    'input.mp3',
+    '-filter:a',
+    'ebur128=peak=true',
+    '-f',
+    'null',
+    '-',
+  ])
 
-  // あとは on('stderr') でログが得られるのでそこから値をパースする
-  // 実行後、必要に応じて FS から除去
-  ffmpeg.FS('unlink', 'input.wav')
+  // 一時ファイルの削除
+  await ffmpeg.deleteFile('input.mp3')
 
-  // FFmpeg インスタンスを再利用しない場合は、メモリを解放する
-  // (特に大量のファイルを扱う場合など)
-  // ffmpeg.exit()
+  // ログ出力から統合ラウドネスを抽出
+  const logs = ffmpeg.logs.map((log) => log.message)
+  const loudnessMatch = logs.find((log) => log.includes('I:'))
+  if (!loudnessMatch) {
+    throw new Error('ラウドネス値が見つかりませんでした')
+  }
+
+  // 統合ラウドネス値を抽出して返す
+  const match = loudnessMatch.match(/I:\s+(-?\d+\.\d+)\s+LUFS/)
+  if (!match) {
+    throw new Error('ラウドネス値の解析に失敗しました')
+  }
+
+  return parseFloat(match[1])
 }

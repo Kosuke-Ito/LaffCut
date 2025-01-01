@@ -155,22 +155,16 @@ export const calculateIntegratedLoudness = (
     throw new Error('sampleRate は正の値でなければなりません。')
   }
 
-  const blockSize = Math.floor(0.4 * sampleRate) // 400ms
-  console.log('ブロックサイズ設定:', {
-    sampleRate,
-    blockSize,
-    blockDurationMs: (blockSize / sampleRate) * 1000,
-  })
+  const blockSize = Math.floor(0.4 * sampleRate)
+  const step = Math.floor(blockSize * 0.75)
 
   // ブロックごとのエネルギー計算
   const energies: number[] = []
   let i = 0
-  const step = Math.floor(blockSize * 0.75) // 75%オーバーラップ
   while (i + blockSize <= data.length) {
     const block = data.slice(i, i + blockSize)
     const power = calculateBlockEnergy(block)
     if (!isNaN(power) && power > 0) {
-      // 有効な値のみを追加
       energies.push(power)
     }
     i += step
@@ -207,7 +201,7 @@ export const calculateIntegratedLoudness = (
   // 相対ゲート（平均から-10 LU）を適用
   const meanEnergy =
     gatedEnergies.reduce((sum, val) => sum + val, 0) / gatedEnergies.length
-  const relativeThreshold = -0.691 + 10 * Math.log10(meanEnergy) - 10
+  const relativeThreshold = 10 * Math.log10(meanEnergy) - 10
   const finalGatedEnergies = gatedEnergies.filter((energy) => {
     const l = 10 * Math.log10(energy)
     return l > relativeThreshold && !isNaN(l)
@@ -254,7 +248,7 @@ const calculateBlockEnergy = (block: Float32Array): number => {
 
   let sum = 0
   for (let i = 0; i < block.length; i++) {
-    const normalizedSample = block[i]
+    const normalizedSample = block[i] * 1.12201845430196
     sum += normalizedSample * normalizedSample
   }
   return sum / block.length

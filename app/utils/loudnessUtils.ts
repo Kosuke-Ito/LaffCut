@@ -201,7 +201,7 @@ export const calculateIntegratedLoudness = (
   // 相対ゲート（平均から-10 LU）を適用
   const meanEnergy =
     gatedEnergies.reduce((sum, val) => sum + val, 0) / gatedEnergies.length
-  const relativeThreshold = 10 * Math.log10(meanEnergy) - 10
+  const relativeThreshold = -0.691 + 10 * Math.log10(meanEnergy) - 10
   const finalGatedEnergies = gatedEnergies.filter((energy) => {
     const l = 10 * Math.log10(energy)
     return l > relativeThreshold && !isNaN(l)
@@ -221,6 +221,14 @@ export const calculateIntegratedLoudness = (
   console.log('相対ゲート閾値:', relativeThreshold)
   console.log('ゲーティング前のブロック数:', energies.length)
   console.log('最終的なブロック数:', finalGatedEnergies.length)
+
+  // 中間値のログ出力
+  console.log('絶対ゲート後の平均エネルギー:', meanEnergy)
+  console.log(
+    '相対ゲート後の平均エネルギー:',
+    finalGatedEnergies.reduce((sum, val) => sum + val, 0) /
+      finalGatedEnergies.length
+  )
 
   // 統合ラウドネスの計算
   const integratedEnergy =
@@ -248,7 +256,7 @@ const calculateBlockEnergy = (block: Float32Array): number => {
 
   let sum = 0
   for (let i = 0; i < block.length; i++) {
-    const normalizedSample = block[i] * 1.12201845430196
+    const normalizedSample = block[i] * 1.1220184543019633
     sum += normalizedSample * normalizedSample
   }
   return sum / block.length

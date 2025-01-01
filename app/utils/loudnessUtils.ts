@@ -83,6 +83,15 @@ export const applyKWeighting = (
   // 2 段階のフィルタ適用 (Head + RLB)
   const KWeightedData = iirFilter(filteredData, d, c)
 
+  // フィルタ適用後のレベルをログ出力
+  const rms = Math.sqrt(
+    KWeightedData.reduce((sum, x) => sum + x * x, 0) / KWeightedData.length
+  )
+  console.log('K重み付けフィルタ統計:', {
+    rms,
+    sampleCount: KWeightedData.length,
+  })
+
   return KWeightedData
 }
 
@@ -147,6 +156,11 @@ export const calculateIntegratedLoudness = (
   }
 
   const blockSize = Math.floor(0.4 * sampleRate) // 400ms
+  console.log('ブロックサイズ設定:', {
+    sampleRate,
+    blockSize,
+    blockDurationMs: (blockSize / sampleRate) * 1000,
+  })
 
   // ブロックごとのエネルギー計算
   const energies: number[] = []

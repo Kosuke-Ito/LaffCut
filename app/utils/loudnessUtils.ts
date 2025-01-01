@@ -60,6 +60,7 @@ export const applyKWeighting = (
   data: Float32Array,
   sampleRate: number
 ): Float32Array => {
+  // 入力データやサンプルレートの妥当性をチェック
   if (!data || data.length === 0) {
     throw new Error('data が無効です。')
   }
@@ -67,32 +68,22 @@ export const applyKWeighting = (
     throw new Error('sampleRate は正の値でなければなりません。')
   }
 
-  console.log('K重み付け前のデータ統計:', {
-    length: data.length,
-    sampleRate,
-    max: getArrayMax(data),
-    min: getArrayMin(data),
-    hasNaN: data.some((x) => isNaN(x)),
-    power: calculateBlockEnergy(data),
-  })
-
-  // フィルタ設計のためにIIRフィルタを使用
-  // フィルタ係数はITU-R BS.1770-4の規格に従う
-  // 48kHzのサンプルレートを基準とした係数
-  const b = [1.53512485958697, -2.69169618940638, 1.19839281085285]
+  // ITU-R BS.1770-4 の仕様に基づく
+  // K 重み付けフィルタ (Head Filter) の係数
   const a = [1.0, -1.69065929318241, 0.73248077421585]
+  const b = [1.53512485958697, -2.69169618940638, 1.19839281085285]
 
-  // フィルタを適用
+  // IIR フィルタを通して周波数特性を実現
   const filteredData = iirFilter(data, b, a)
 
-  console.log('K重み付け後のデータ統計:', {
-    length: filteredData.length,
-    max: getArrayMax(filteredData),
-    min: getArrayMin(filteredData),
-    hasNaN: filteredData.some((x) => isNaN(x)),
-  })
+  // RLB フィルタ係数 低域を補正
+  const c = [1.0, -1.99004745483398, 0.99007225036621]
+  const d = [1.0, -2.0, 1.0]
 
-  return filteredData
+  // 2 段階のフィルタ適用 (Head + RLB)
+  const KWeightedData = iirFilter(filteredData, d, c)
+
+  return KWeightedData
 }
 
 /**
@@ -118,18 +109,18 @@ export const iirFilter = (
   const buffer = new Float32Array(a.length).fill(0)
 
   for (let n = 0; n < data.length; n++) {
-    // 入力データをバッファに追加
+    // フィルタ内部バッファにサンプルを追加
     buffer[0] = data[n]
-    // フィルタ計算
+    // b[], a[] を用いた畳み込み演算 (ディレク・フォーム I など)
     let y = 0
     for (let i = 0; i < b.length; i++) {
       y += b[i] * buffer[i]
     }
     for (let i = 1; i < a.length; i++) {
-      y -= a[i] * output[n - i] || 0
+      y -= a[i] * (output[n - i] || 0)
     }
     output[n] = y
-    // バッファをシフト
+    // バッファのシフト
     for (let i = a.length - 1; i > 0; i--) {
       buffer[i] = buffer[i - 1]
     }
@@ -218,6 +209,11 @@ export const calculateIntegratedLoudness = (
     throw new Error('相対ゲーティング後のエネルギーブロックが存在しません。')
   }
 
+  // 中間値のログ出力を追加
+  console.log('相対ゲート閾値:', relativeThreshold)
+  console.log('ゲーティング前のブロック数:', energies.length)
+  console.log('最終的なブロック数:', finalGatedEnergies.length)
+
   // 統合ラウドネスの計算
   const integratedEnergy =
     finalGatedEnergies.reduce((sum, val) => sum + val, 0) /
@@ -244,7 +240,8 @@ const calculateBlockEnergy = (block: Float32Array): number => {
 
   let sum = 0
   for (let i = 0; i < block.length; i++) {
-    sum += block[i] * block[i]
+    const normalizedSample = block[i] * 0.95
+    sum += normalizedSample * normalizedSample
   }
   return sum / block.length
 }

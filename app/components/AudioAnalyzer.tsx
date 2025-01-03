@@ -1,10 +1,6 @@
 import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
-import {
-  applyKWeighting,
-  calculateIntegratedLoudness,
-  convertToMono,
-} from '~/utils/loudnessUtils'
+import { calculateLoudness } from '~/utils/ffmpegLoudnessUtils'
 
 export function AudioAnalyzer() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -34,49 +30,13 @@ export function AudioAnalyzer() {
 
     setAnalyzing(true)
     try {
-      // web audio apiのAudioContextをサンプルレート48kHzに固定して作成
-      const audioContext = new AudioContext({
-        sampleRate: 48000,
-      })
-
-      // アップロードされた音声データのバッファを変数に格納
-      const arrayBuffer = await file.arrayBuffer()
-      let audioBuffer
-
-      try {
-        // デコードされた AudioBuffer は AudioContext のサンプリングレート(48kHz)にリサンプリングされます
-        audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-      } catch (decodeError) {
-        console.error('音声のデコードに失敗しました:', decodeError)
-        alert(
-          '音声ファイルの読み込みに失敗しました。ファイルが破損しているか、対応していない形式の可能性があります。'
-        )
-        setAnalyzing(false)
-        return
-      }
-
-      // ステレオの場合はモノラルに変換
-      const channelData: Float32Array =
-        audioBuffer.numberOfChannels === 2
-          ? convertToMono(audioBuffer)
-          : audioBuffer.getChannelData(0)
-
-      // K重み付けフィルタを適用
-      const filtered = applyKWeighting(channelData, audioContext.sampleRate)
-
-      // 統合ラウドネスを計算
-      const lufs = calculateIntegratedLoudness(
-        filtered,
-        audioContext.sampleRate
-      )
+      // ffmpegを使用してラウドネスを計算
+      const lufs = await calculateLoudness(file)
 
       setResults({
         integratedLUFS: lufs,
         YouTubeLUFS: lufs + 16,
       })
-
-      // メモリ解放
-      audioContext.close()
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
       alert('音声の解析中にエラーが発生しました。')

@@ -1,32 +1,49 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg'
+import type { FFmpeg } from '@ffmpeg/ffmpeg'
 import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
-const ffmpeg = new FFmpeg()
+let ffmpeg: FFmpeg | null = null
 
-const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd'
+const initializeFFmpeg = async (): Promise<FFmpeg> => {
+  if (!ffmpeg) {
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
 
-await ffmpeg.load({
-  coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-  wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-})
+    ffmpeg = new FFmpeg()
+
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(
+        `${baseURL}/ffmpeg-core.wasm`,
+        'application/wasm'
+      ),
+    })
+
+    if (!ffmpeg.loaded) {
+      await ffmpeg.load()
+    }
+  }
+  return ffmpeg
+}
 
 export const calculateLoudness = async (audioFile: File): Promise<number> => {
-  if (!ffmpeg.loaded) {
-    await ffmpeg.load()
+  if (typeof window === 'undefined') {
+    throw new Error('この関数はクライアントサイドでのみ実行可能です。')
   }
 
-  // ファイルをffmpegのファイルシステムに書き込み
-  await ffmpeg.writeFile('input.mp3', await fetchFile(audioFile))
+  const ffmpegInstance = await initializeFFmpeg()
+
+  // ファイルをffmpegの仮想ファイルシステムに書き込み
+  await ffmpegInstance.writeFile('input.mp3', await fetchFile(audioFile))
 
   // ebur128フィルタを使用してラウドネスを測定
   let loudnessLog = ''
-  ffmpeg.on('log', ({ message }) => {
+  ffmpegInstance.on('log', ({ message }) => {
     if (message.includes('I:')) {
       loudnessLog = message
     }
   })
 
-  await ffmpeg.exec([
+  await ffmpegInstance.exec([
     '-i',
     'input.mp3',
     '-filter:a',
@@ -37,7 +54,7 @@ export const calculateLoudness = async (audioFile: File): Promise<number> => {
   ])
 
   // 一時ファイルの削除
-  await ffmpeg.deleteFile('input.mp3')
+  await ffmpegInstance.deleteFile('input.mp3')
 
   if (!loudnessLog) {
     throw new Error('ラウドネス値が見つかりませんでした')

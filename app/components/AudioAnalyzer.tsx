@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
-import { calculateLoudness } from '~/utils/ffmpegLoudnessUtils'
 
 export function AudioAnalyzer() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -13,7 +12,8 @@ export function AudioAnalyzer() {
     YouTubeLUFS: null,
   })
 
-  const analyzeAudio = async (file: File) => {
+  // クライアントサイド専用の関数
+  const analyzeAudio = useCallback(async (file: File) => {
     if (!file.type.startsWith('audio/')) {
       alert(
         '不正なファイル形式です。音声ファイル（WAV、MP3など）を選択してください。'
@@ -30,28 +30,35 @@ export function AudioAnalyzer() {
 
     setAnalyzing(true)
     try {
-      // ffmpegを使用してラウドネスを計算
-      const lufs = await calculateLoudness(file)
+      if (typeof window !== 'undefined') {
+        const { calculateLoudness } = await import(
+          '~/utils/ffmpegLoudnessUtils'
+        )
+        const lufs = await calculateLoudness(file)
 
-      setResults({
-        integratedLUFS: lufs,
-        YouTubeLUFS: lufs + 16,
-      })
+        setResults({
+          integratedLUFS: lufs,
+          YouTubeLUFS: lufs + 16,
+        })
+      }
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
       alert('音声の解析中にエラーが発生しました。')
     } finally {
       setAnalyzing(false)
     }
-  }
-
-  const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const droppedFile = e.dataTransfer.files[0]
-    console.log('droppedFile:', droppedFile)
-    setAudioFile(droppedFile)
-    analyzeAudio(droppedFile)
   }, [])
+
+  const onDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      const droppedFile = e.dataTransfer.files[0]
+      console.log('droppedFile:', droppedFile)
+      setAudioFile(droppedFile)
+      analyzeAudio(droppedFile)
+    },
+    [analyzeAudio]
+  )
 
   return (
     <div className="space-y-10">

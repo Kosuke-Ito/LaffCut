@@ -2,6 +2,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 const ffmpeg = new FFmpeg()
+
 const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd'
 
 await ffmpeg.load({
@@ -18,6 +19,13 @@ export const calculateLoudness = async (audioFile: File): Promise<number> => {
   await ffmpeg.writeFile('input.mp3', await fetchFile(audioFile))
 
   // ebur128フィルタを使用してラウドネスを測定
+  let loudnessLog = ''
+  ffmpeg.on('log', ({ message }) => {
+    if (message.includes('I:')) {
+      loudnessLog = message
+    }
+  })
+
   await ffmpeg.exec([
     '-i',
     'input.mp3',
@@ -31,15 +39,12 @@ export const calculateLoudness = async (audioFile: File): Promise<number> => {
   // 一時ファイルの削除
   await ffmpeg.deleteFile('input.mp3')
 
-  // ログ出力から統合ラウドネスを抽出
-  const logs = ffmpeg.logs.map((log) => log.message)
-  const loudnessMatch = logs.find((log) => log.includes('I:'))
-  if (!loudnessMatch) {
+  if (!loudnessLog) {
     throw new Error('ラウドネス値が見つかりませんでした')
   }
 
   // 統合ラウドネス値を抽出して返す
-  const match = loudnessMatch.match(/I:\s+(-?\d+\.\d+)\s+LUFS/)
+  const match = loudnessLog.match(/I:\s+(-?\d+\.\d+)\s+LUFS/)
   if (!match) {
     throw new Error('ラウドネス値の解析に失敗しました')
   }

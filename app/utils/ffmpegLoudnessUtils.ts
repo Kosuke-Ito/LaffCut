@@ -25,7 +25,6 @@ export const calculateLoudness = async (audioFile: File): Promise<number> => {
     await ffmpeg.load({
       coreURL,
       wasmURL,
-      log: true,
     })
   } catch (error) {
     console.error('FFmpegのロードに失敗しました:', error)

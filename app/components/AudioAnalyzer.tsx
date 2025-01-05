@@ -1,53 +1,115 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
+
+// 型定義
+type LoudnessResults = {
+  integratedLUFS: number | null
+  YouTubeLUFS: number | null
+}
 
 export function AudioAnalyzer() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
-  const [results, setResults] = useState<{
-    integratedLUFS: number | null
-    YouTubeLUFS: number | null
-  }>({
+  const [results, setResults] = useState<LoudnessResults>({
     integratedLUFS: null,
     YouTubeLUFS: null,
   })
+  const [loaded, setLoaded] = useState(false)
+  const ffmpegRef = useRef(new FFmpeg())
 
-  // クライアントサイド専用の関数
-  const analyzeAudio = useCallback(async (file: File) => {
-    if (!file.type.startsWith('audio/')) {
-      alert(
-        '不正なファイル形式です。音声ファイル（WAV、MP3など）を選択してください。'
-      )
-      return
+  // クライアントサイドのみでFFmpegをロード
+  useEffect(() => {
+    const loadFFmpeg = async () => {
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+      const ffmpeg = ffmpegRef.current
+      console.log('ffmpeg:', ffmpeg)
+      // toBlobURL is used to bypass CORS issue, urls with the same
+      // domain can be used directly.
+      await ffmpeg.load({
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          'text/javascript'
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          'application/wasm'
+        ),
+      })
+      setLoaded(true)
     }
 
-    // ファイルサイズチェック
-    const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300MB
-    if (file.size > MAX_FILE_SIZE) {
-      alert('ファイルサイズが大きすぎます（上限: 300MB）')
-      return
-    }
+    loadFFmpeg()
+  }, [])
 
-    setAnalyzing(true)
-    try {
-      if (typeof window !== 'undefined') {
-        const { calculateLoudness } = await import(
-          '~/utils/ffmpegLoudnessUtils'
+  // 音声解析関数
+  const analyzeAudio = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith('audio/')) {
+        alert(
+          '不正なファイル形式です。音声ファイル（WAV、MP3など）を選択してください。'
         )
-        const lufs = await calculateLoudness(file)
+        return
+      }
+
+      const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300MB
+      if (file.size > MAX_FILE_SIZE) {
+        alert('ファイルサイズが大きすぎます（上限: 300MB）')
+        return
+      }
+
+      if (!loaded || !ffmpegRef.current) {
+        alert('FFmpegがロードされていません。少々お待ちください。')
+        return
+      }
+
+      setAnalyzing(true)
+      try {
+        const ffmpeg = ffmpegRef.current
+        await ffmpeg.writeFile('input.mp3', await fetchFile(file))
+
+        let loudnessLog = ''
+        ffmpeg.on('log', ({ message }) => {
+          if (message.includes('Integrated')) {
+            loudnessLog = message
+          }
+        })
+
+        await ffmpeg.exec([
+          '-i',
+          'input.mp3',
+          '-filter:a',
+          'ebur128=peak=true',
+          '-f',
+          'null',
+          '-',
+        ])
+
+        await ffmpeg.deleteFile('input.mp3')
+
+        if (!loudnessLog) {
+          throw new Error('ラウドネス値が見つかりませんでした')
+        }
+
+        const match = loudnessLog.match(/Integrated:\s*(-?\d+\.\d+)\s*LUFS/)
+        if (!match) {
+          throw new Error('ラウドネス値の解析に失敗しました')
+        }
 
         setResults({
-          integratedLUFS: lufs,
-          YouTubeLUFS: lufs + 16,
+          integratedLUFS: parseFloat(match[1]),
+          YouTubeLUFS: parseFloat(match[1]) + 16,
         })
+      } catch (error) {
+        console.error('音声の解析中にエラーが発生しました:', error)
+        alert('音声の解析中にエラーが発生しました。')
+      } finally {
+        setAnalyzing(false)
       }
-    } catch (error) {
-      console.error('音声の解析中にエラーが発生しました:', error)
-      alert('音声の解析中にエラーが発生しました。')
-    } finally {
-      setAnalyzing(false)
-    }
-  }, [])
+    },
+    [loaded]
+  )
 
   const onDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -87,10 +149,12 @@ export function AudioAnalyzer() {
           onDragOver={(e) => e.preventDefault()}
         >
           <FileAudio className="w-12 h-12 text-gray-400 mb-4" />
-          {audioFile ? (
+          {!loaded ? (
+            <p className="text-gray-500">FFmpegをロード中...</p>
+          ) : audioFile ? (
             <p className="text-gray-500">{audioFile.name}</p>
           ) : (
-            <p className="text-gray-500">ここにファイルをドラッ＆ドロップ</p>
+            <p className="text-gray-500">ここにファイルをドラッグ＆ドロップ</p>
           )}
         </div>
       </div>

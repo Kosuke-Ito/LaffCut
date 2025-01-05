@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.8",
-    "@ffmpeg/core-mt": "^0.12.6",
     "@ffmpeg/ffmpeg": "^0.12.13",
     "@ffmpeg/util": "^0.12.1",
     "@radix-ui/react-dropdown-menu": "^2.1.2",

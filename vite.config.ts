@@ -7,6 +7,25 @@ export default defineConfig({
 
   optimizeDeps: {
     include: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
-    exclude: ['@ffmpeg/ffmpeg'], // FFmpegを除外
   },
+
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
+
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          ffmpeg: ['@ffmpeg/ffmpeg'],
+        },
+      },
+    },
+  },
+
+  publicDir: 'public',
 })

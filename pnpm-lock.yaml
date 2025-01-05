@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@ffmpeg/ffmpeg':
-    specifier: ^0.12.13
+    specifier: ^0.12.10
     version: 0.12.13
   '@ffmpeg/util':
     specifier: ^0.12.1

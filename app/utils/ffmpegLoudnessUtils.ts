@@ -15,6 +15,7 @@ export const calculateLoudness = async (audioFile: File): Promise<number> => {
       'text/javascript'
     )
     console.log('coreURL:', coreURL)
+
     const wasmURL = await toBlobURL(
       `${baseURL}/ffmpeg-core.wasm`,
       'application/wasm'

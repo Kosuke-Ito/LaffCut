@@ -69,9 +69,9 @@ export function AudioAnalyzer() {
         await ffmpeg.writeFile('input.mp3', await fetchFile(file))
 
         let loudnessLog = ''
-        ffmpeg.on('log', ({ message }) => {
+        ffmpeg.on('log', ({ message }: { message: string }) => {
           console.log('FFmpeg Log:', message)
-          if (message.includes('Integrated')) {
+          if (message.includes('I:') && message.includes('LUFS')) {
             loudnessLog = message
           }
         })
@@ -92,7 +92,7 @@ export function AudioAnalyzer() {
           throw new Error('ラウドネス値が見つかりませんでした')
         }
 
-        const match = loudnessLog.match(/Integrated:\s*(-?\d+\.\d+)\s*LUFS/)
+        const match = loudnessLog.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
         if (!match) {
           throw new Error('ラウドネス値の解析に失敗しました')
         }

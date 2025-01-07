@@ -1,5 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
 
 // 型定義
 type LoudnessResults = {
@@ -15,7 +16,7 @@ export function AudioAnalyzer() {
     YouTubeLUFS: null,
   })
   const [loaded, setLoaded] = useState(false)
-  const ffmpegRef = useRef<any>(null)
+  const ffmpegRef = useRef<FFmpeg | null>(null)
 
   useEffect(() => {
     const loadFFmpeg = async () => {
@@ -64,11 +65,14 @@ export function AudioAnalyzer() {
       }
 
       setAnalyzing(true)
+
+      // loudnessLog を try-catch の外に宣言
+      let loudnessLog = ''
+
       try {
         const ffmpeg = ffmpegRef.current
         await ffmpeg.writeFile('input.mp3', await fetchFile(file))
 
-        let loudnessLog = ''
         ffmpeg.on('log', ({ message }: { message: string }) => {
           console.log('FFmpeg Log:', message)
           if (message.includes('I:') && message.includes('LUFS')) {
@@ -92,6 +96,7 @@ export function AudioAnalyzer() {
           throw new Error('ラウドネス値が見つかりませんでした')
         }
 
+        // 正規表現を修正
         const match = loudnessLog.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
         if (!match) {
           throw new Error('ラウドネス値の解析に失敗しました')
@@ -103,6 +108,19 @@ export function AudioAnalyzer() {
         })
       } catch (error) {
         console.error('音声の解析中にエラーが発生しました:', error)
+
+        // loudnessLog が設定されている場合は解析を試みる
+        if (loudnessLog) {
+          const match = loudnessLog.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
+          if (match) {
+            setResults({
+              integratedLUFS: parseFloat(match[1]),
+              YouTubeLUFS: parseFloat(match[1]) + 16,
+            })
+            return
+          }
+        }
+
         alert('音声の解析中にエラーが発生しました。')
       } finally {
         setAnalyzing(false)

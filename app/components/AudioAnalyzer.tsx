@@ -17,6 +17,7 @@ export function AudioAnalyzer() {
   })
   const [loaded, setLoaded] = useState(false)
   const ffmpegRef = useRef<FFmpeg | null>(null)
+  let loudnessLog = ''
 
   useEffect(() => {
     const loadFFmpeg = async () => {
@@ -58,9 +59,6 @@ export function AudioAnalyzer() {
       }
 
       setAnalyzing(true)
-
-      // loudnessLog を try-catch の外に宣言
-      let loudnessLog = ''
 
       try {
         const ffmpeg = ffmpegRef.current

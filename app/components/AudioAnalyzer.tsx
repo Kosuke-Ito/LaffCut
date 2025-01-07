@@ -1,7 +1,5 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 // 型定義
 type LoudnessResults = {
@@ -17,26 +15,25 @@ export function AudioAnalyzer() {
     YouTubeLUFS: null,
   })
   const [loaded, setLoaded] = useState(false)
-  const ffmpegRef = useRef(new FFmpeg())
+  const ffmpegRef = useRef<any>(null)
 
-  // クライアントサイドのみでFFmpegをロード
   useEffect(() => {
     const loadFFmpeg = async () => {
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-      const ffmpeg = ffmpegRef.current
-      console.log('ffmpeg:', ffmpeg)
-      // toBlobURL is used to bypass CORS issue, urls with the same
-      // domain can be used directly.
+      const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+      const { toBlobURL } = await import('@ffmpeg/util')
+
+      const ffmpeg = new FFmpeg()
       await ffmpeg.load({
         coreURL: await toBlobURL(
-          `${baseURL}/ffmpeg-core.js`,
+          'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js',
           'text/javascript'
         ),
         wasmURL: await toBlobURL(
-          `${baseURL}/ffmpeg-core.wasm`,
+          'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm',
           'application/wasm'
         ),
       })
+      ffmpegRef.current = ffmpeg
       setLoaded(true)
     }
 
@@ -46,6 +43,8 @@ export function AudioAnalyzer() {
   // 音声解析関数
   const analyzeAudio = useCallback(
     async (file: File) => {
+      const { fetchFile } = await import('@ffmpeg/util')
+
       if (!file.type.startsWith('audio/')) {
         alert(
           '不正なファイル形式です。音声ファイル（WAV、MP3など）を選択してください。'
@@ -71,6 +70,7 @@ export function AudioAnalyzer() {
 
         let loudnessLog = ''
         ffmpeg.on('log', ({ message }) => {
+          console.log('FFmpeg Log:', message)
           if (message.includes('Integrated')) {
             loudnessLog = message
           }

@@ -8,17 +8,51 @@ type LoudnessResults = {
   YouTubeLUFS: number | null
 }
 
+/**
+ * AudioAnalyzer コンポーネントは、ユーザーがアップロードした音声ファイルを解析し、
+ * ラウドネスレベルを計測します。FFmpeg を使用して音声ファイルを処理し、
+ * 結果を表示します。
+ *
+ * @returns React コンポーネント
+ */
 export function AudioAnalyzer() {
+  /**
+   * アップロードされた音声ファイルを保持する状態
+   */
   const [audioFile, setAudioFile] = useState<File | null>(null)
+
+  /**
+   * 現在音声ファイルを解析中かどうかを示す状態
+   */
   const [analyzing, setAnalyzing] = useState(false)
+
+  /**
+   * ラウドネス解析の結果を保持する状態
+   */
   const [results, setResults] = useState<LoudnessResults>({
     integratedLUFS: null,
     YouTubeLUFS: null,
   })
+
+  /**
+   * FFmpeg のロード状態を管理する状態
+   */
   const [loaded, setLoaded] = useState(false)
+
+  /**
+   * FFmpeg インスタンスを保持する参照
+   */
   const ffmpegRef = useRef<FFmpeg | null>(null)
+
+  /**
+   * ラウドネス解析のログを保持する変数
+   */
   let loudnessLog = ''
 
+  /**
+   * コンポーネントのマウント時に FFmpeg をロードします。
+   * 動的に FFmpeg のコアファイルと WebAssembly モジュールを読み込みます。
+   */
   useEffect(() => {
     const loadFFmpeg = async () => {
       // 動的インポート
@@ -35,7 +69,11 @@ export function AudioAnalyzer() {
     loadFFmpeg()
   }, [])
 
-  // 音声解析関数
+  /**
+   * アップロードされた音声ファイルを解析し、ラウドネスレベルを計測します。
+   *
+   * @param file - 解析対象の音声ファイル
+   */
   const analyzeAudio = useCallback(
     async (file: File) => {
       const { fetchFile } = await import('@ffmpeg/util')
@@ -64,6 +102,9 @@ export function AudioAnalyzer() {
         const ffmpeg = ffmpegRef.current
         await ffmpeg.writeFile('input.mp3', await fetchFile(file))
 
+        /**
+         * FFmpeg のログを監視し、ラウドネス情報を取得します。
+         */
         ffmpeg.on('log', ({ message }: { message: string }) => {
           console.log('FFmpeg Log:', message)
           if (message.includes('I:') && message.includes('LUFS')) {
@@ -120,6 +161,11 @@ export function AudioAnalyzer() {
     [loaded]
   )
 
+  /**
+   * ファイルがドロップされたときに呼び出されるハンドラー
+   *
+   * @param e - ドラッグイベント
+   */
   const onDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault()

@@ -20,6 +20,7 @@ export function AudioAnalyzer() {
 
   useEffect(() => {
     const loadFFmpeg = async () => {
+      // 動的インポート
       const { toBlobURL } = await import('@ffmpeg/util')
       const ffmpeg = new FFmpeg()
       await ffmpeg.load({

@@ -20,19 +20,11 @@ export function AudioAnalyzer() {
 
   useEffect(() => {
     const loadFFmpeg = async () => {
-      const { FFmpeg } = await import('@ffmpeg/ffmpeg')
       const { toBlobURL } = await import('@ffmpeg/util')
-
       const ffmpeg = new FFmpeg()
       await ffmpeg.load({
-        coreURL: await toBlobURL(
-          'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js',
-          'text/javascript'
-        ),
-        wasmURL: await toBlobURL(
-          'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm',
-          'application/wasm'
-        ),
+        coreURL: await toBlobURL('/ffmpeg-core.js', 'text/javascript'),
+        wasmURL: await toBlobURL('/ffmpeg-core.wasm', 'application/wasm'),
       })
       ffmpegRef.current = ffmpeg
       setLoaded(true)

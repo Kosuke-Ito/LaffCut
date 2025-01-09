@@ -6,11 +6,11 @@ settings:
 
 dependencies:
   '@ffmpeg/ffmpeg':
-    specifier: ^0.12.10
+    specifier: ^0.12.13
     version: 0.12.13
   '@ffmpeg/util':
-    specifier: ^0.12.1
-    version: 0.12.1
+    specifier: ^0.12.2
+    version: 0.12.2
   '@radix-ui/react-dropdown-menu':
     specifier: ^2.1.2
     version: 2.1.2(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1)(react@18.3.1)
@@ -648,8 +648,8 @@ packages:
     engines: {node: '>=16.x'}
     dev: false
 
-  /@ffmpeg/util@0.12.1:
-    resolution: {integrity: sha512-10jjfAKWaDyb8+nAkijcsi9wgz/y26LOc1NKJradNMyCIl6usQcBbhkjX5qhALrSBcOy6TOeksunTYa+a03qNQ==}
+  /@ffmpeg/util@0.12.2:
+    resolution: {integrity: sha512-ouyoW+4JB7WxjeZ2y6KpRvB+dLp7Cp4ro8z0HIVpZVCM7AwFlHa0c4R8Y/a4M3wMqATpYKhC7lSFHQ0T11MEDw==}
     engines: {node: '>=18.x'}
     dev: false
 

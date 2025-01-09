@@ -106,12 +106,12 @@ export function AudioAnalyzer() {
          * FFmpeg のログを監視し、ラウドネス情報を取得します。
          */
         ffmpeg.on('log', ({ message }: { message: string }) => {
-          console.log('message:', message)
           if (message.includes('I:') && message.includes('LUFS')) {
             loudnessLog = message
           }
         })
 
+        // ラウドネス解析
         await ffmpeg.exec([
           '-i',
           'input.mp3',

@@ -1,6 +1,7 @@
-import { useCallback, useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { toBlobURL, fetchFile } from '@ffmpeg/util'
 
 // 型定義
 type LoudnessResults = {
@@ -15,58 +16,54 @@ type LoudnessResults = {
  *
  * @returns React コンポーネント
  */
-export function AudioAnalyzer() {
+export const AudioAnalyzer = () => {
   /**
    * アップロードされた音声ファイルを保持する状態
    */
   const [audioFile, setAudioFile] = useState<File | null>(null)
-
-  /**
-   * 現在音声ファイルを解析中かどうかを示す状態
-   */
   const [analyzing, setAnalyzing] = useState(false)
-
-  /**
-   * ラウドネス解析の結果を保持する状態
-   */
   const [results, setResults] = useState<LoudnessResults>({
     integratedLUFS: null,
     YouTubeLUFS: null,
   })
 
-  /**
-   * FFmpeg のロード状態を管理する状態
-   */
   const [loaded, setLoaded] = useState(false)
-
-  /**
-   * FFmpeg インスタンスを保持する参照
-   */
   const ffmpegRef = useRef<FFmpeg | null>(null)
-
-  /**
-   * ラウドネス解析のログを保持する変数
-   */
-  let loudnessLog = ''
+  const loudnessLogRef = useRef<string>('')
+  const messageRef = useRef<HTMLParagraphElement | null>(null)
 
   /**
    * コンポーネントのマウント時に FFmpeg をロードします。
    * 動的に FFmpeg のコアファイルと WebAssembly モジュールを読み込みます。
    */
-  useEffect(() => {
-    const loadFFmpeg = async () => {
-      // 動的インポート
-      const { toBlobURL } = await import('@ffmpeg/util')
+  const load = async () => {
+    if (!ffmpegRef.current) {
       const ffmpeg = new FFmpeg()
-      await ffmpeg.load({
-        coreURL: await toBlobURL('/ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL('/ffmpeg-core.wasm', 'application/wasm'),
-      })
       ffmpegRef.current = ffmpeg
+
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+
+      ffmpeg.on('log', ({ message }) => {
+        if (messageRef.current) messageRef.current.innerHTML = message
+      })
+      // toBlobURL is used to bypass CORS issue, urls with the same
+      // domain can be used directly.
+      await ffmpeg.load({
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          'text/javascript'
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          'application/wasm'
+        ),
+      })
       setLoaded(true)
     }
+  }
 
-    loadFFmpeg()
+  useEffect(() => {
+    load()
   }, [])
 
   /**
@@ -74,108 +71,63 @@ export function AudioAnalyzer() {
    *
    * @param file - 解析対象の音声ファイル
    */
-  const analyzeAudio = useCallback(
-    async (file: File) => {
-      const { fetchFile } = await import('@ffmpeg/util')
+  const analyzeAudio = async (file: File) => {
+    if (!loaded || !ffmpegRef.current) {
+      alert('FFmpegがロードされていません。少々お待ちください。')
+      return
+    }
 
-      if (!file.type.startsWith('audio/')) {
-        alert(
-          '不正なファイル形式です。音声ファイル（WAV、MP3など）を選択してください。'
-        )
-        return
+    setAnalyzing(true)
+    loudnessLogRef.current = ''
+
+    const ffmpeg = ffmpegRef.current
+    try {
+      // ファイルをFFmpegの仮想ファイルシステムに書き込む
+      await ffmpeg.writeFile('input.mp3', await fetchFile(file))
+
+      // ラウドネス解析を実行
+      await ffmpeg.exec([
+        '-i',
+        'input.mp3',
+        '-filter:a',
+        'ebur128',
+        '-f',
+        'null',
+        '-',
+      ])
+
+      console.log('ラウドネス解析ログ:', loudnessLogRef.current)
+
+      const match = loudnessLogRef.current.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
+      if (!match) {
+        throw new Error('ラウドネス値の解析に失敗しました')
       }
 
-      const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300MB
-      if (file.size > MAX_FILE_SIZE) {
-        alert('ファイルサイズが大きすぎます（上限: 300MB）')
-        return
-      }
-
-      if (!loaded || !ffmpegRef.current) {
-        alert('FFmpegがロードされていません。少々お待ちください。')
-        return
-      }
-
-      setAnalyzing(true)
-
-      try {
-        const ffmpeg = ffmpegRef.current
-        await ffmpeg.writeFile('input.mp3', await fetchFile(file))
-
-        /**
-         * FFmpeg のログを監視し、ラウドネス情報を取得します。
-         */
-        ffmpeg.on('log', ({ message }: { message: string }) => {
-          if (message.includes('I:') && message.includes('LUFS')) {
-            loudnessLog = message
-          }
-        })
-
-        // ラウドネス解析
-        await ffmpeg.exec([
-          '-i',
-          'input.mp3',
-          '-filter:a',
-          'ebur128=peak=true',
-          '-f',
-          'null',
-          '-',
-        ])
-
-        await ffmpeg.deleteFile('input.mp3')
-
-        if (!loudnessLog) {
-          throw new Error('ラウドネス値が見つかりませんでした')
-        }
-
-        // 正規表現を修正
-        const match = loudnessLog.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
-        if (!match) {
-          throw new Error('ラウドネス値の解析に失敗しました')
-        }
-
-        setResults({
-          integratedLUFS: parseFloat(match[1]),
-          YouTubeLUFS: parseFloat(match[1]) + 16,
-        })
-      } catch (error) {
-        console.error('音声の解析中にエラーが発生しました:', error)
-
-        // loudnessLog が設定されている場合は解析を試みる
-        if (loudnessLog) {
-          const match = loudnessLog.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
-          if (match) {
-            setResults({
-              integratedLUFS: parseFloat(match[1]),
-              YouTubeLUFS: parseFloat(match[1]) + 16,
-            })
-            return
-          }
-        }
-
-        alert('音声の解析中にエラーが発生しました。')
-      } finally {
-        setAnalyzing(false)
-      }
-    },
-    [loaded]
-  )
+      setResults({
+        integratedLUFS: parseFloat(match[1]),
+        YouTubeLUFS: parseFloat(match[1]) + 16,
+      })
+    } catch (error) {
+      console.error('音声の解析中にエラーが発生しました:', error)
+      alert('音声の解析中にエラーが発生しました。')
+    } finally {
+      setAnalyzing(false)
+      await ffmpeg.deleteFile('input.mp3')
+    }
+  }
 
   /**
    * ファイルがドロップされたときに呼び出されるハンドラー
    *
    * @param e - ドラッグイベント
    */
-  const onDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      const droppedFile = e.dataTransfer.files[0]
-      console.log('droppedFile:', droppedFile)
-      setAudioFile(droppedFile)
-      analyzeAudio(droppedFile)
-    },
-    [analyzeAudio]
-  )
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const droppedFile = e.dataTransfer.files[0]
+    console.log('droppedFile:', droppedFile)
+    setAudioFile(droppedFile)
+    analyzeAudio(droppedFile)
+  }
 
   return (
     <div className="space-y-10">
@@ -244,29 +196,11 @@ export function AudioAnalyzer() {
               </p>
             </div>
           </div>
-
-          <div className="bg-blue-50 p-4 rounded">
-            <h4 className="font-medium mb-2">音量調整の推奨</h4>
-            {results.integratedLUFS > -14 ? (
-              <p className="text-sm">
-                現在の音量は推奨範囲より大きいため、YouTubeで自動的に音量が下げられる可能性があります。
-                {Math.abs(results.integratedLUFS + 14).toFixed(1)}
-                dB程度の音量低下をお勧めします。
-              </p>
-            ) : results.integratedLUFS < -14 ? (
-              <p className="text-sm">
-                現在の音量は推奨範囲より小さいため、YouTubeで自動的に音量が上げられます。より良い音質を得るために、
-                {Math.abs(results.integratedLUFS + 14).toFixed(1)}
-                dB程度の音量増加をお勧めします。
-              </p>
-            ) : (
-              <p className="text-sm">
-                現在の音量は推奨範囲内です。調整の必要はありません。
-              </p>
-            )}
-          </div>
         </div>
       )}
+
+      {/* ログ表示エリア */}
+      <div ref={messageRef} className="mt-4 text-sm text-gray-600"></div>
     </div>
   )
 }

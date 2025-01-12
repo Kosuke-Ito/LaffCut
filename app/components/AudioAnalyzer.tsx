@@ -39,15 +39,12 @@ export const AudioAnalyzer = () => {
     if (!ffmpegRef.current) {
       const ffmpeg = new FFmpeg()
       ffmpegRef.current = ffmpeg
-
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-
       ffmpeg.on('log', ({ message }) => {
-        console.log('FFmpeg log:', message)
         loudnessLogRef.current += `${message}\n`
       })
       // toBlobURL is used to bypass CORS issue, urls with the same
       // domain can be used directly.
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
       await ffmpeg.load({
         coreURL: await toBlobURL(
           `${baseURL}/ffmpeg-core.js`,
@@ -94,6 +91,8 @@ export const AudioAnalyzer = () => {
         '-f',
         'null',
         '-',
+        '-loglevel',
+        'verbose',
       ])
 
       console.log('ラウドネス解析ログ:', loudnessLogRef.current)

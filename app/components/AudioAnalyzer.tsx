@@ -205,7 +205,7 @@ export function AudioAnalyzer() {
         >
           <FileAudio className="w-12 h-12 text-gray-400 mb-4" />
           {!loaded ? (
-            <p className="text-gray-500">FFmpegをロード中...</p>
+            <p className="text-gray-500">ロード中...</p>
           ) : audioFile ? (
             <p className="text-gray-500">{audioFile.name}</p>
           ) : (

@@ -31,6 +31,9 @@ export const AudioAnalyzer = () => {
   const ffmpegRef = useRef<FFmpeg | null>(null)
   const loudnessLogRef = useRef<string>('')
 
+  // 追加: 進捗を管理する状態
+  const [progress, setProgress] = useState<number>(0)
+
   /**
    * コンポーネントのマウント時に FFmpeg をロードします。
    * 動的に FFmpeg のコアファイルと WebAssembly モジュールを読み込みます。
@@ -41,6 +44,10 @@ export const AudioAnalyzer = () => {
       ffmpegRef.current = ffmpeg
       ffmpeg.on('log', ({ message }) => {
         loudnessLogRef.current += `${message}\n`
+      })
+      ffmpeg.on('progress', ({ progress }) => {
+        console.log(`Progress: ${progress * 100}%`)
+        setProgress(progress * 100) // 追加: 進捗を更新
       })
       // toBlobURL is used to bypass CORS issue, urls with the same
       // domain can be used directly.
@@ -76,6 +83,7 @@ export const AudioAnalyzer = () => {
 
     setAnalyzing(true)
     loudnessLogRef.current = ''
+    setProgress(0) // 追加: 進捗をリセット
 
     const ffmpeg = ffmpegRef.current
     try {
@@ -171,6 +179,16 @@ export const AudioAnalyzer = () => {
         <div className="text-center">
           <Volume2 className="inline-block w-6 h-6 mr-2 animate-pulse" />
           <p>音声を解析中...</p>
+          {/* 追加: 進捗表示 */}
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 rounded-full h-4">
+              <div
+                className="bg-green-600 h-4 rounded-full"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-700 mt-2">{progress.toFixed(2)}%</p>
+          </div>
         </div>
       )}
 

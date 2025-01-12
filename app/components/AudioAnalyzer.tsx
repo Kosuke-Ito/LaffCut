@@ -30,7 +30,6 @@ export const AudioAnalyzer = () => {
   const [loaded, setLoaded] = useState(false)
   const ffmpegRef = useRef<FFmpeg | null>(null)
   const loudnessLogRef = useRef<string>('')
-  const messageRef = useRef<HTMLParagraphElement | null>(null)
 
   /**
    * コンポーネントのマウント時に FFmpeg をロードします。
@@ -44,7 +43,8 @@ export const AudioAnalyzer = () => {
       const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
 
       ffmpeg.on('log', ({ message }) => {
-        if (messageRef.current) messageRef.current.innerHTML = message
+        console.log('FFmpeg log:', message)
+        loudnessLogRef.current += `${message}\n`
       })
       // toBlobURL is used to bypass CORS issue, urls with the same
       // domain can be used directly.
@@ -198,9 +198,6 @@ export const AudioAnalyzer = () => {
           </div>
         </div>
       )}
-
-      {/* ログ表示エリア */}
-      <div ref={messageRef} className="mt-4 text-sm text-gray-600"></div>
     </div>
   )
 }

@@ -102,7 +102,7 @@ export const AudioAnalyzer = () => {
         'verbose',
       ])
 
-      console.log('ラウドネス解析ログ:', loudnessLogRef.current)
+      // console.log('ラウドネス解析ログ:', loudnessLogRef.current)
 
       const match = loudnessLogRef.current.match(
         /Summary:\s*Integrated loudness:\s*I:\s*(-?\d+\.\d+)\s*LUFS/m
@@ -132,7 +132,7 @@ export const AudioAnalyzer = () => {
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
-    console.log('droppedFile:', droppedFile)
+    // console.log('droppedFile:', droppedFile)
     setAudioFile(droppedFile)
     analyzeAudio(droppedFile)
   }

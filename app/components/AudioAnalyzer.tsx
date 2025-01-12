@@ -98,7 +98,9 @@ export const AudioAnalyzer = () => {
 
       console.log('ラウドネス解析ログ:', loudnessLogRef.current)
 
-      const match = loudnessLogRef.current.match(/I:\s*(-?\d+\.\d+)\s*LUFS/)
+      const match = loudnessLogRef.current.match(
+        /Summary:\s*Integrated loudness:\s*I:\s*(-?\d+\.\d+)\s*LUFS/m
+      )
       if (!match) {
         throw new Error('ラウドネス値の解析に失敗しました')
       }

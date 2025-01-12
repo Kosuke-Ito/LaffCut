@@ -107,7 +107,7 @@ export const AudioAnalyzer = () => {
 
       setResults({
         integratedLUFS: parseFloat(match[1]),
-        YouTubeLUFS: parseFloat(match[1]) + 16,
+        YouTubeLUFS: parseFloat(match[1]) + 14,
       })
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)

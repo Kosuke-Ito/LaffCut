@@ -1,7 +1,7 @@
-import { useState } from 'react'
+// import { useState } from 'react'
 import { Link, type MetaFunction } from 'react-router'
 import { AudioAnalyzer } from '~/components/AudioAnalyzer'
-import { SubtitleConverter } from '~/components/SubtitleConverter'
+// import { SubtitleConverter } from '~/components/SubtitleConverter'
 
 export const meta: MetaFunction = () => {
   return [
@@ -14,7 +14,7 @@ export const meta: MetaFunction = () => {
 }
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState<'audio' | 'subtitle'>('audio')
+  // const [activeTab, setActiveTab] = useState<'audio' | 'subtitle'>('audio')
 
   return (
     <div className="min-h-screen bg-white">
@@ -50,7 +50,8 @@ export default function Index() {
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
-          {activeTab === 'audio' ? <AudioAnalyzer /> : <SubtitleConverter />}
+          {/* {activeTab === 'audio' ? <AudioAnalyzer /> : <SubtitleConverter />} */}
+          <AudioAnalyzer />
         </div>
       </main>
       <footer className="bg-white">

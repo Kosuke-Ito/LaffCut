@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { MetaFunction } from 'react-router'
+import { Link, type MetaFunction } from 'react-router'
 import { AudioAnalyzer } from '~/components/AudioAnalyzer'
 import { SubtitleConverter } from '~/components/SubtitleConverter'
 
@@ -26,7 +26,8 @@ export default function Index() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="flex space-x-4 mb-6">
-          <button
+          <h2 className="text-2xl font-bold">動画編集者向けの音声分析ツール</h2>
+          {/* <button
             className={`text-xl font-bold px-8 py-4 rounded border-2 ${
               activeTab === 'audio'
                 ? 'bg-black text-white border-white'
@@ -35,8 +36,8 @@ export default function Index() {
             onClick={() => setActiveTab('audio')}
           >
             Audio Analysis
-          </button>
-          <button
+          </button> */}
+          {/* <button
             className={`text-xl font-bold px-8 py-4 rounded border-2 ${
               activeTab === 'subtitle'
                 ? 'bg-black text-white border-white'
@@ -45,13 +46,29 @@ export default function Index() {
             onClick={() => setActiveTab('subtitle')}
           >
             Subtitle Converter
-          </button>
+          </button> */}
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
           {activeTab === 'audio' ? <AudioAnalyzer /> : <SubtitleConverter />}
         </div>
       </main>
+      <footer className="bg-white">
+        <div className="max-w-7xl mx-auto py-6 px-4">
+          <p className="text-sm text-gray-500">
+            追加実装のご要望はXで
+            <Link
+              to="https://x.com/nikku_ject"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              @nikku_ject
+            </Link>
+            までお願いします。
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -3,6 +3,19 @@ import { FileAudio, Volume2 } from 'lucide-react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL, fetchFile } from '@ffmpeg/util'
 
+// Chrome Performance Memory API の型定義
+interface PerformanceMemory {
+  jsHeapSizeLimit: number
+  totalJSHeapSize: number
+  usedJSHeapSize: number
+}
+
+interface WindowWithMemory extends Window {
+  performance: Performance & {
+    memory?: PerformanceMemory
+  }
+}
+
 // 型定義
 type LoudnessResults = {
   integratedLUFS: number | null
@@ -33,6 +46,8 @@ export const AudioAnalyzer = () => {
 
   // 追加: 進捗を管理する状態
   const [progress, setProgress] = useState<number>(0)
+
+  const MAX_FILE_SIZE = 200 * 1024 * 1024 // 200MB
 
   /**
    * コンポーネントのマウント時に FFmpeg をロードします。
@@ -86,13 +101,21 @@ export const AudioAnalyzer = () => {
 
     const ffmpeg = ffmpegRef.current
     try {
-      // ファイルをFFmpegの仮想ファイルシステムに書き込む
-      await ffmpeg.writeFile('input.mp3', await fetchFile(file))
+      // メモリ使用量の監視
+      const memory = (window as WindowWithMemory).performance.memory
+      if (memory && memory.usedJSHeapSize && memory.jsHeapSizeLimit) {
+        if (memory.usedJSHeapSize > 0.8 * memory.jsHeapSizeLimit) {
+          throw new Error('メモリ使用量が制限に達しました。')
+        }
+      }
 
-      // ラウドネス解析を実行
+      // ファイル名のサニタイズ
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      await ffmpeg.writeFile(safeFileName, await fetchFile(file))
+
       await ffmpeg.exec([
         '-i',
-        'input.mp3',
+        safeFileName,
         '-filter:a',
         'ebur128',
         '-f',
@@ -108,7 +131,7 @@ export const AudioAnalyzer = () => {
         /Summary:\s*Integrated loudness:\s*I:\s*(-?\d+\.\d+)\s*LUFS/m
       )
       if (!match) {
-        throw new Error('ラウドネス値の解析に失敗しました')
+        throw new Error('ラウドネス値の解析に失敗しました。')
       }
 
       setResults({
@@ -117,10 +140,20 @@ export const AudioAnalyzer = () => {
       })
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
-      alert('音声の解析中にエラーが発生しました。')
+      if (error instanceof Error) {
+        alert(`エラーが発生しました: ${error.message}`)
+      } else {
+        alert('予期せぬエラーが発生しました。')
+      }
     } finally {
       setAnalyzing(false)
-      await ffmpeg.deleteFile('input.mp3')
+      // 一時ファイルの確実な削除
+      try {
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        await ffmpeg.deleteFile(safeFileName)
+      } catch (error) {
+        console.error('一時ファイルの削除に失敗しました:', error)
+      }
     }
   }
 
@@ -132,7 +165,39 @@ export const AudioAnalyzer = () => {
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
-    // console.log('droppedFile:', droppedFile)
+
+    // ファイルサイズのチェック
+    if (droppedFile.size > MAX_FILE_SIZE) {
+      alert(
+        'ファイルサイズが大きすぎます。200MB以下のファイルを使用してください。'
+      )
+      return
+    }
+
+    // ファイルタイプの厳密な検証
+    const validMimeTypes = [
+      'audio/mp3',
+      'audio/wav',
+      'audio/mpeg', // mp3ファイルの一般的なMIMEタイプ
+      'audio/wave', // wavファイルの代替MIMEタイプ
+      'audio/x-wav', // wavファイルの代替MIMEタイプ
+      'video/mp4',
+    ]
+
+    // ファイル拡張子の検証
+    const extension = droppedFile.name.split('.').pop()?.toLowerCase()
+    const validExtensions = ['mp3', 'wav', 'mp4']
+
+    if (
+      !validMimeTypes.includes(droppedFile.type) &&
+      (!extension || !validExtensions.includes(extension))
+    ) {
+      alert('不正なファイル形式です。mp3, wav, mp4のみ対応しています。')
+      console.log('File type:', droppedFile.type)
+      console.log('File extension:', extension)
+      return
+    }
+
     setAudioFile(droppedFile)
     analyzeAudio(droppedFile)
   }
@@ -143,13 +208,14 @@ export const AudioAnalyzer = () => {
         <h3 className="text-lg font-medium">YouTubeアップロード推奨設定</h3>
         <ul className="list-disc pl-5 space-y-1">
           <li>推奨LUFS: -10 ~ -14 LUFS</li>
-          <li>True Peak制限: -1 dBTP</li>
         </ul>
         <p className="text-xs text-gray-500">
           詳細は{' '}
           <a
             href="https://support.google.com/youtube/answer/1722171?hl=ja"
             className="text-blue-500 underline"
+            target="_blank"
+            rel="noreferrer"
           >
             YouTubeエンコード設定推奨
           </a>{' '}

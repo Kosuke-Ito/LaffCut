@@ -46,8 +46,7 @@ export const AudioAnalyzer = () => {
         loudnessLogRef.current += `${message}\n`
       })
       ffmpeg.on('progress', ({ progress }) => {
-        console.log(`Progress: ${progress * 100}%`)
-        setProgress(progress * 100) // 追加: 進捗を更新
+        setProgress(Math.ceil(progress * 100)) // 追加: 進捗を更新
       })
       // toBlobURL is used to bypass CORS issue, urls with the same
       // domain can be used directly.
@@ -187,7 +186,7 @@ export const AudioAnalyzer = () => {
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-            <p className="text-sm text-gray-700 mt-2">{progress.toFixed(2)}%</p>
+            <p className="text-sm text-gray-700 mt-2">{progress}%</p>
           </div>
         </div>
       )}

@@ -82,7 +82,7 @@ export const AudioAnalyzer = () => {
 
     setAnalyzing(true)
     loudnessLogRef.current = ''
-    setProgress(0) // 追加: 進捗をリセット
+    setProgress(0) // 進捗をリセット
 
     const ffmpeg = ffmpegRef.current
     try {

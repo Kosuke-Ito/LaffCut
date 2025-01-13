@@ -1,8 +1,6 @@
 # LaffCutへようこそ
 
-https://laffcut.pages.dev/
-
-
+音声ファイルの音量をすぐに解析できます
 
 https://github.com/user-attachments/assets/49b045fe-4adc-4fdd-accd-5720c8355a86
 

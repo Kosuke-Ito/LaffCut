@@ -3,6 +3,11 @@
 https://laffcut.pages.dev/
 
 
+
+https://github.com/user-attachments/assets/49b045fe-4adc-4fdd-accd-5720c8355a86
+
+
+
 ## 現在の機能
 現在は、AudioAnalyzerとSubtitleConverterの2つの機能があります。
 

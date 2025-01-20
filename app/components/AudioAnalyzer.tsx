@@ -49,6 +49,7 @@ export const AudioAnalyzer = () => {
 
   const MAX_FILE_SIZE = 200 * 1024 * 1024 // 200MB
 
+  // useCallbackを使用して、メモ化
   const load = useCallback(async () => {
     if (!ffmpegRef.current) {
       const ffmpeg = new FFmpeg()

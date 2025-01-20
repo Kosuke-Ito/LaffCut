@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL, fetchFile } from '@ffmpeg/util'
@@ -49,11 +49,7 @@ export const AudioAnalyzer = () => {
 
   const MAX_FILE_SIZE = 200 * 1024 * 1024 // 200MB
 
-  /**
-   * コンポーネントのマウント時に FFmpeg をロードします。
-   * 動的に FFmpeg のコアファイルと WebAssembly モジュールを読み込みます。
-   */
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!ffmpegRef.current) {
       const ffmpeg = new FFmpeg()
       ffmpegRef.current = ffmpeg
@@ -61,28 +57,20 @@ export const AudioAnalyzer = () => {
         loudnessLogRef.current += `${message}\n`
       })
       ffmpeg.on('progress', ({ progress }) => {
-        setProgress(Math.ceil(progress * 100)) // 追加: 進捗を更新
+        setProgress(Math.ceil(progress * 100))
       })
-      // toBlobURL is used to bypass CORS issue, urls with the same
-      // domain can be used directly.
       const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
       await ffmpeg.load({
-        coreURL: await toBlobURL(
-          `${baseURL}/ffmpeg-core.js`,
-          'text/javascript'
-        ),
-        wasmURL: await toBlobURL(
-          `${baseURL}/ffmpeg-core.wasm`,
-          'application/wasm'
-        ),
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
       })
       setLoaded(true)
     }
-  }
+  }, [])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   /**
    * アップロードされた音声ファイルを解析し、ラウドネスレベルを計測します。
@@ -103,7 +91,7 @@ export const AudioAnalyzer = () => {
     try {
       // メモリ使用量の監視
       const memory = (window as WindowWithMemory).performance.memory
-      if (memory && memory.usedJSHeapSize && memory.jsHeapSizeLimit) {
+      if (memory?.usedJSHeapSize && memory?.jsHeapSizeLimit) {
         if (memory.usedJSHeapSize > 0.8 * memory.jsHeapSizeLimit) {
           throw new Error('メモリ使用量が制限に達しました。')
         }
@@ -135,8 +123,8 @@ export const AudioAnalyzer = () => {
       }
 
       setResults({
-        integratedLUFS: parseFloat(match[1]),
-        YouTubeLUFS: parseFloat(match[1]) + 14,
+        integratedLUFS: Number.parseFloat(match[1]),
+        YouTubeLUFS: Number.parseFloat(match[1]) + 14,
       })
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
@@ -250,7 +238,7 @@ export const AudioAnalyzer = () => {
               <div
                 className="bg-green-600 h-4 rounded-full"
                 style={{ width: `${progress}%` }}
-              ></div>
+              />
             </div>
             <p className="text-sm text-gray-700 mt-2">{progress}%</p>
           </div>

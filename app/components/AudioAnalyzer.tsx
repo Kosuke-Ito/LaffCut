@@ -336,7 +336,7 @@ export const AudioAnalyzer = () => {
 
       <div className="grid place-items-center">
         <div
-          className="w-full max-w-md p-6 bg-white rounded-lg shadow-md flex flex-col items-center justify-center border-2 border-dashed border-gray-300"
+          className="w-full max-w-md p-6 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center border-2 border-dashed border-gray-300"
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
         >
@@ -346,9 +346,10 @@ export const AudioAnalyzer = () => {
           ) : audioFile ? (
             <p className="text-gray-500">{audioFile.name}</p>
           ) : (
-            <p className="text-gray-500">ここにファイルをドラッグ＆ドロップ</p>
+            <p className="text-gray-500">音声ファイルをドラッグ＆ドロップ</p>
           )}
         </div>
+        <p className="text-red-400 mt-4">※音声形式のファイルしか解析できません</p>
       </div>
 
       {analyzing && (

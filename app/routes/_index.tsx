@@ -8,7 +8,7 @@ export const meta: MetaFunction = () => {
     { title: 'LaffCut' },
     {
       name: 'description',
-      content: 'LaffCutは動画編集者向けの音声分析と字幕変換ツールです。',
+      content: 'LaffCutは動画編集者向けの音量（ラウドネス）解析と字幕変換ツールです。',
     },
   ]
 }
@@ -26,7 +26,7 @@ export default function Index() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="flex space-x-4 mb-6">
-          <h2 className="text-2xl font-bold">動画編集者向けの音声分析ツール</h2>
+          <h2 className="text-2xl font-bold">動画編集者向けの音量（ラウドネス）解析ツール</h2>
           {/* <button
             className={`text-xl font-bold px-8 py-4 rounded border-2 ${
               activeTab === 'audio'

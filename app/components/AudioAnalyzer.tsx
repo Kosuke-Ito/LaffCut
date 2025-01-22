@@ -349,7 +349,7 @@ export const AudioAnalyzer = () => {
             <p className="text-gray-500">音声ファイルをドラッグ＆ドロップ</p>
           )}
         </div>
-        <p className="text-red-400 mt-4">※音声形式のファイルしか解析できません</p>
+        <p className="text-red-400 mt-4">※音声形式のファイルのみ解析できます</p>
       </div>
 
       {analyzing && (

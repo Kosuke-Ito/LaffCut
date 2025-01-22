@@ -260,7 +260,7 @@ export const AudioAnalyzer = () => {
             return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
           },
           label: (context: { raw: unknown; formattedValue: string }) => {
-            return `モーメンタリーラウドネス: ${context.formattedValue} LUFS`;
+            return `${Number.parseFloat(context.formattedValue).toFixed(1)} LUFS`;
           }
         }
       },

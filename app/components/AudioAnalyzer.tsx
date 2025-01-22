@@ -2,6 +2,17 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { FileAudio, Volume2 } from 'lucide-react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL, fetchFile } from '@ffmpeg/util'
+import { Line } from 'react-chartjs-2'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
 
 // Chrome Performance Memory API の型定義
 interface PerformanceMemory {
@@ -21,6 +32,17 @@ type LoudnessResults = {
   integratedLUFS: number | null
   YouTubeLUFS: number | null
 }
+
+// ChartJSの登録
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
 
 /**
  * AudioAnalyzer コンポーネントは、ユーザーがアップロードした音声ファイルを解析し、
@@ -48,6 +70,8 @@ export const AudioAnalyzer = () => {
   const [progress, setProgress] = useState<number>(0)
 
   const MAX_FILE_SIZE = 200 * 1024 * 1024 // 200MB
+
+  const [loudnessData, setLoudnessData] = useState<{ time: number; lufs: number }[]>([])
 
   // useCallbackを使用して、メモ化
   const load = useCallback(async () => {
@@ -114,7 +138,40 @@ export const AudioAnalyzer = () => {
         'verbose',
       ])
 
-      // console.log('ラウドネス解析ログ:', loudnessLogRef.current)
+      // ログデータをUint8Array形式に変換
+      const encoder = new TextEncoder()
+      const logData = encoder.encode(loudnessLogRef.current)
+      
+      await ffmpeg.writeFile('log.txt', logData)
+      // ログファイルからラウドネス全体をビジュアライズ
+      const logFileBlob = await ffmpeg.readFile('log.txt')
+      const logText = new TextDecoder().decode(logFileBlob as Uint8Array)
+      
+      // ログからLUFS値を抽出（正規表現パターンを修正）
+      const lufsMatches = logText.matchAll(/t:\s*(\d+\.?\d*)\s+TARGET:[^M]+M:\s*(-?\d+\.?\d*)\s+S:/g)
+      const allPoints = Array.from(lufsMatches).map(match => ({
+        time: Number.parseFloat(match[1]),
+        lufs: Number.parseFloat(match[2])
+      }))
+
+      // 10秒ごとのデータポイントに変換
+      const loudnessPoints = Array.from({ length: Math.ceil(allPoints[allPoints.length - 1].time / 10) }, (_, i) => {
+        const startTime = i * 10
+        const endTime = (i + 1) * 10
+        const pointsInRange = allPoints.filter(p => p.time >= startTime && p.time < endTime)
+        const averageLufs = pointsInRange.length > 0
+          ? pointsInRange.reduce((sum, p) => sum + p.lufs, 0) / pointsInRange.length
+          : null
+        return {
+          time: startTime,
+          lufs: averageLufs ?? -150 // データがない場合は最小値を設定
+        }
+      })
+      
+      setLoudnessData(loudnessPoints)
+      
+      // グラフ更新後の状態を確認
+      console.log('Updated loudnessData:', loudnessPoints);
 
       const match = loudnessLogRef.current.match(
         /Summary:\s*Integrated loudness:\s*I:\s*(-?\d+\.\d+)\s*LUFS/m
@@ -189,6 +246,65 @@ export const AudioAnalyzer = () => {
 
     setAudioFile(droppedFile)
     analyzeAudio(droppedFile)
+  }
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          title: (tooltipItems: Array<{ label: string | number }>) => {
+            const seconds = Number(tooltipItems[0].label);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+          },
+          label: (context: { raw: number }) => {
+            return `時間軸ラウドネス: ${context.raw.toFixed(3)}`;
+          }
+        }
+      },
+      legend: {
+        position: 'top' as const,
+        onClick: null
+      },
+      title: {
+        display: true,
+        text: 'ラウドネス変化',
+      },
+    },
+    scales: {
+      x: {
+        type: 'linear' as const,
+        title: {
+          display: true,
+          text: '時間',
+        },
+        ticks: {
+          // 10秒ごとに目盛りを表示
+          stepSize: 10,
+          // 時間フォーマットを分:秒に変換
+          callback: (tickValue: number | string) => {
+            const value = Number(tickValue);
+            const minutes = Math.floor(value / 60);
+            const seconds = Math.floor(value % 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          }
+        },
+        grid: {
+          display: true,
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'LUFS',
+        },
+        grid: {
+          display: true,
+        },
+      },
+    }
   }
 
   return (
@@ -269,6 +385,26 @@ export const AudioAnalyzer = () => {
               </p>
             </div>
           </div>
+          
+          {/* ラウドネスグラフの追加 */}
+          {loudnessData.length > 0 && (
+            <div className="bg-white p-4 rounded-lg shadow">
+              <Line
+                data={{
+                  labels: loudnessData.map(point => point.time.toFixed(1)),
+                  datasets: [
+                    {
+                      label: 'モーメンタリーラウドネス',
+                      data: loudnessData.map(point => point.lufs),
+                      borderColor: 'rgb(75, 192, 192)',
+                      tension: 0.1
+                    }
+                  ]
+                }}
+                options={chartOptions}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

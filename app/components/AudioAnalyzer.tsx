@@ -396,7 +396,7 @@ export const AudioAnalyzer = () => {
                     {
                       label: "LUFS",
                       data: loudnessData.map(point => point.lufs),
-                      borderColor: 'rgb(75, 192, 192)',
+                      borderColor: 'rgb(120, 120, 120)',
                       tension: 0.1
                     }
                   ]

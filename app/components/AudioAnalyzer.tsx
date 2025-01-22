@@ -252,6 +252,12 @@ export const AudioAnalyzer = () => {
     responsive: true,
     plugins: {
       tooltip: {
+        titleFont: {
+          size: 16
+        },
+        bodyFont: {
+          size: 16
+        },
         callbacks: {
           title: (tooltipItems: Array<{ label: string | number }>) => {
             const seconds = Number(tooltipItems[0].label);

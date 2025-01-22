@@ -259,14 +259,14 @@ export const AudioAnalyzer = () => {
             const remainingSeconds = Math.floor(seconds % 60);
             return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
           },
-          label: (context: { raw: number }) => {
-            return `時間軸ラウドネス: ${context.raw.toFixed(3)}`;
+          label: (context: { raw: unknown; formattedValue: string }) => {
+            return `モーメンタリーラウドネス: ${context.formattedValue} LUFS`;
           }
         }
       },
       legend: {
         position: 'top' as const,
-        onClick: null
+        onClick: () => {}
       },
       title: {
         display: true,
@@ -394,7 +394,7 @@ export const AudioAnalyzer = () => {
                   labels: loudnessData.map(point => point.time.toFixed(1)),
                   datasets: [
                     {
-                      label: 'モーメンタリーラウドネス',
+                      label: "LUFS",
                       data: loudnessData.map(point => point.lufs),
                       borderColor: 'rgb(75, 192, 192)',
                       tension: 0.1

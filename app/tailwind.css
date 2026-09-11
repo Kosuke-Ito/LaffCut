@@ -24,7 +24,3 @@ html,
 body {
   @apply bg-purple-200;
 }
-
-color {
-  @apply text-gray-800;
-}

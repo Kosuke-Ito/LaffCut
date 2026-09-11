@@ -111,6 +111,9 @@ export const AudioAnalyzer = () => {
 
     setAnalyzing(true)
     setErrorMessage(null)
+    // 前回の解析結果が失敗時のエラー表示と同時に残らないようリセット
+    setResults({ integratedLUFS: null, YouTubeLUFS: null })
+    setLoudnessData([])
     loudnessLogRef.current = ''
     setProgress(0) // 進捗をリセット
 

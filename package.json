@@ -8,7 +8,9 @@
     "dev": "react-router dev",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -43,6 +45,7 @@
     "typescript": "^5.9.3",
     "vite": "^8.2.2",
     "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^5.0.0",
     "wrangler": "^4.129.0"
   },
   "engines": {

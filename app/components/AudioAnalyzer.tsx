@@ -4,6 +4,11 @@ import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL, fetchFile } from '@ffmpeg/util'
 import { Line } from 'react-chartjs-2'
 import {
+  binLoudnessPoints,
+  extractLufsPoints,
+  parseIntegratedLoudness,
+} from '../utils/loudness'
+import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -152,40 +157,19 @@ export const AudioAnalyzer = () => {
       const logFileBlob = await ffmpeg.readFile('log.txt')
       const logText = new TextDecoder().decode(logFileBlob as Uint8Array)
       
-      // ログからLUFS値を抽出（正規表現パターンを修正）
-      const lufsMatches = logText.matchAll(/t:\s*(\d+\.?\d*)\s+TARGET:[^M]+M:\s*(-?\d+\.?\d*)\s+S:/g)
-      const allPoints = Array.from(lufsMatches).map(match => ({
-        time: Number.parseFloat(match[1]),
-        lufs: Number.parseFloat(match[2])
-      }))
-
-      // 10秒ごとのデータポイントに変換（ログから抽出できなかった場合はグラフを出さない）
-      const lastPointTime = allPoints.length > 0 ? allPoints[allPoints.length - 1].time : 0
-      const loudnessPoints = Array.from({ length: Math.ceil(lastPointTime / 10) }, (_, i) => {
-        const startTime = i * 10
-        const endTime = (i + 1) * 10
-        const pointsInRange = allPoints.filter(p => p.time >= startTime && p.time < endTime)
-        const averageLufs = pointsInRange.length > 0
-          ? pointsInRange.reduce((sum, p) => sum + p.lufs, 0) / pointsInRange.length
-          : null
-        return {
-          time: startTime,
-          lufs: averageLufs ?? -150 // データがない場合は最小値を設定
-        }
-      })
-      
+      // ログからLUFS値を抽出し、10秒ごとのデータポイントに変換
+      //（ログから抽出できなかった場合はグラフを出さない）
+      const loudnessPoints = binLoudnessPoints(extractLufsPoints(logText))
       setLoudnessData(loudnessPoints)
 
-      const match = loudnessLogRef.current.match(
-        /Summary:\s*Integrated loudness:\s*I:\s*(-?\d+\.\d+)\s*LUFS/m
-      )
-      if (!match) {
+      const integratedLUFS = parseIntegratedLoudness(loudnessLogRef.current)
+      if (integratedLUFS === null) {
         throw new Error('ラウドネス値の解析に失敗しました。')
       }
 
       setResults({
-        integratedLUFS: Number.parseFloat(match[1]),
-        YouTubeLUFS: Number.parseFloat(match[1]) + 14,
+        integratedLUFS,
+        YouTubeLUFS: integratedLUFS + 14,
       })
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)

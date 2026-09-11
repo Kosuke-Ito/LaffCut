@@ -63,6 +63,7 @@ export const AudioAnalyzer = () => {
   })
 
   const [loaded, setLoaded] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const ffmpegRef = useRef<FFmpeg | null>(null)
   const loudnessLogRef = useRef<string>('')
 
@@ -104,11 +105,12 @@ export const AudioAnalyzer = () => {
    */
   const analyzeAudio = async (file: File) => {
     if (!loaded || !ffmpegRef.current) {
-      alert('FFmpegがロードされていません。少々お待ちください。')
+      setErrorMessage('FFmpegがロードされていません。少々お待ちください。')
       return
     }
 
     setAnalyzing(true)
+    setErrorMessage(null)
     loudnessLogRef.current = ''
     setProgress(0) // 進捗をリセット
 
@@ -154,8 +156,9 @@ export const AudioAnalyzer = () => {
         lufs: Number.parseFloat(match[2])
       }))
 
-      // 10秒ごとのデータポイントに変換
-      const loudnessPoints = Array.from({ length: Math.ceil(allPoints[allPoints.length - 1].time / 10) }, (_, i) => {
+      // 10秒ごとのデータポイントに変換（ログから抽出できなかった場合はグラフを出さない）
+      const lastPointTime = allPoints.length > 0 ? allPoints[allPoints.length - 1].time : 0
+      const loudnessPoints = Array.from({ length: Math.ceil(lastPointTime / 10) }, (_, i) => {
         const startTime = i * 10
         const endTime = (i + 1) * 10
         const pointsInRange = allPoints.filter(p => p.time >= startTime && p.time < endTime)
@@ -169,9 +172,6 @@ export const AudioAnalyzer = () => {
       })
       
       setLoudnessData(loudnessPoints)
-      
-      // グラフ更新後の状態を確認
-      console.log('Updated loudnessData:', loudnessPoints);
 
       const match = loudnessLogRef.current.match(
         /Summary:\s*Integrated loudness:\s*I:\s*(-?\d+\.\d+)\s*LUFS/m
@@ -187,9 +187,9 @@ export const AudioAnalyzer = () => {
     } catch (error) {
       console.error('音声の解析中にエラーが発生しました:', error)
       if (error instanceof Error) {
-        alert(`エラーが発生しました: ${error.message}`)
+        setErrorMessage(`エラーが発生しました: ${error.message}`)
       } else {
-        alert('予期せぬエラーが発生しました。')
+        setErrorMessage('予期せぬエラーが発生しました。')
       }
     } finally {
       setAnalyzing(false)
@@ -211,10 +211,11 @@ export const AudioAnalyzer = () => {
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
+    if (!droppedFile) return
 
     // ファイルサイズのチェック
     if (droppedFile.size > MAX_FILE_SIZE) {
-      alert(
+      setErrorMessage(
         'ファイルサイズが大きすぎます。200MB以下のファイルを使用してください。'
       )
       return
@@ -238,12 +239,11 @@ export const AudioAnalyzer = () => {
       !validMimeTypes.includes(droppedFile.type) &&
       (!extension || !validExtensions.includes(extension))
     ) {
-      alert('不正なファイル形式です。mp3, wav, mp4のみ対応しています。')
-      console.log('File type:', droppedFile.type)
-      console.log('File extension:', extension)
+      setErrorMessage('不正なファイル形式です。mp3, wav, mp4のみ対応しています。')
       return
     }
 
+    setErrorMessage(null)
     setAudioFile(droppedFile)
     analyzeAudio(droppedFile)
   }
@@ -351,6 +351,15 @@ export const AudioAnalyzer = () => {
         </div>
         <p className="text-red-400 mt-4">※音声形式のファイルのみ解析できます</p>
       </div>
+
+      {errorMessage && (
+        <div
+          role="alert"
+          className="max-w-md mx-auto bg-red-50 border border-red-300 text-red-700 rounded p-4 text-sm"
+        >
+          {errorMessage}
+        </div>
+      )}
 
       {analyzing && (
         <div className="text-center">

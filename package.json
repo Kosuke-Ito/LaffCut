@@ -36,7 +36,7 @@
   "devDependencies": {
     "@react-router/dev": "^7.18.3",
     "@react-router/remix-routes-option-adapter": "^7.18.3",
-    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
@@ -50,7 +50,7 @@
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
-    "vite": "^7.3.6",
+    "vite": "^8.2.2",
     "vite-tsconfig-paths": "^6.1.1",
     "wrangler": "^4.129.0"
   },
@@ -59,7 +59,7 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^7.3.6",
+      "vite": "^8.2.2",
       "qs": ">=6.16.0",
       "minimatch@9": ">=9.0.9"
     }
